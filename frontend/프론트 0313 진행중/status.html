@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>배터리 불량검출 관리</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+    <link href="https://ai-public.creatie.ai/gen_page/tailwind-custom.css" rel="stylesheet"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
+    <script src="https://cdn.tailwindcss.com/3.4.5?plugins=forms@0.5.7,typography@0.5.13,aspect-ratio@0.4.2,container-queries@0.1.1"></script>
+    <script src="https://ai-public.creatie.ai/gen_page/tailwind-config.min.js" data-color="#000000" data-border-radius="small"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Noto Sans KR', sans-serif; background: #f8f9fa; }
+
+        /* 헤더 스타일 */
+        .header {
+            height: 60px;
+            background: #2c3e50;
+            color: white;
+            padding: 0 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 1000;
+        }
+        .status-alert {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #e74c3c;
+        }
+        .status-indicator {
+            width: 12px; height: 12px;
+            background: #e74c3c;
+            border-radius: 50%;
+            animation: blink 1.5s infinite;
+        }
+        @keyframes blink { 50% { opacity: 0.5; } }
+        .header-center {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        /* 사이드바 */
+        .sidebar {
+            position: fixed;
+            top: 60px;
+            left: 0;
+            bottom: 0;
+            width: 240px;
+            background: white;
+            border-right: 1px solid #ddd;
+            padding: 15px 0;
+            overflow-y: auto;
+        }
+
+        .nav-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .nav-item > a {
+            display: block;
+            padding: 12px 25px;
+            color: #444;
+            text-decoration: none;
+            transition: background 0.3s;
+        }
+
+        .nav-item:hover > a {
+            background: #f1f3f5;
+        }
+
+        .submenu {
+            background: #fff;
+            list-style: none;
+            padding-left: 20px;
+            display: block;
+        }
+
+        .submenu li a {
+            padding: 10px 20px;
+            color: #555;
+            display: block;
+        }
+
+        .submenu li:hover a {
+            background: #f1f3f5;
+        }
+
+        /* 메인 콘텐츠 */
+        .main-content {
+            margin-left: 240px;
+            margin-top: 60px;
+            padding: 30px;
+            min-height: calc(100vh - 60px);
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* 예측 섹션 */
+        .prediction-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        .chart-container {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .chart-header {
+            margin-bottom: 20px;
+        }
+        .chart-title { font-size: 18px; color: #343a40; }
+
+        /* 예측 데이터 테이블 */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-top: 25px;
+            table-layout: fixed;
+        }
+        .data-table th,
+        .data-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+            word-break: break-word;
+        }
+        .data-table th {
+            background: #f8f9fa;
+            color: #666;
+            font-weight: normal;
+        }
+        .prediction-value { color: #e74c3c; }
+
+    </style>
+</head>
+<body>
+    <!-- 헤더 -->
+    <header class="header">
+        <div class="status-alert">
+            <div class="status-indicator"></div>
+            <span>연결상태 확인 필요</span>
+        </div>
+        <div class="header-center">배터리 불량검출 관리 시스템</div>
+        <div class="notification-panel">
+            <i class="fas fa-bell"></i>
+            <a href="#" class="logout-btn" onclick="logout()">로그아웃</a>
+        </div>
+    </header>
+
+    <!-- 사이드바 -->
+    <nav class="sidebar">
+        <ul class="nav-menu">
+            <li class="nav-item"><a href="dashboard.html">대시보드</a></li>
+            <li class="nav-item"><a href="analysis.html">불량분석</a></li>
+            <li class="nav-item"><a href="report.html">배터리 리포트</a></li>
+            <li class="nav-item"><a href="mypage.html">마이페이지</a></li>
+            <li class="nav-item"><a href="settings.html">시스템 설정</a></li>
+        </ul>
+    </nav>
+
+    <!-- 메인 콘텐츠 -->
+    <main class="main-content">
+        <h1 class="text-2xl font-semibold mb-6">배터리 불량검출 관리</h1>
+
+        <!-- 필터 및 차트 섹션 -->
+        <div class="grid grid-cols-3 gap-6 mb-6">
+            <!-- 필터 -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">조회 기간 설정</h3>
+                <div class="flex items-center space-x-4 mb-4">
+                    <input type="date" class="form-input !rounded-button border-gray-300" value="2023-10-01"/>
+                    <span class="text-gray-500">~</span>
+                    <input type="date" class="form-input !rounded-button border-gray-300" value="2023-10-31"/>
+                </div>
+                <button class="bg-custom text-white px-4 py-2 !rounded-button">조회</button>
+            </div>
+
+            <!-- 차트 -->
+            <div class="bg-white p-4 rounded-lg shadow">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">배터리 불량유형</h3>
+                <div id="typeChart" style="height: 300px;"></div>
+            </div>
+        </div>
+
+        <!-- 테이블 및 차트 -->
+        <div class="grid grid-cols-3 gap-6">
+            <div class="col-span-2">
+                <div class="overflow-x-auto bg-white rounded-lg shadow p-6 mb-6">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">배터리 ID</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">불량유형</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">불량상세</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">수량</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">비율</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <tr>
+                                <td class="px-6 py-4 text-sm text-gray-900">BAT001</td>
+                                <td class="px-6 py-4 text-sm text-gray-900">심각</td>
+                                <td class="px-6 py-4 text-sm text-gray-900">셀 손상</td>
+                                <td class="px-6 py-4 text-sm text-gray-900">264,951</td>
+                                <td class="px-6 py-4 text-sm text-gray-900">98.30%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-lg shadow">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">일일 배터리 불량현황</h3>
+                <div id="dailyChart" style="height: 300px;"></div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const typeChart = echarts.init(document.getElementById('typeChart'));
+        const dailyChart = echarts.init(document.getElementById('dailyChart'));
+
+        typeChart.setOption({
+            animation: false,
+            tooltip: {
+                trigger: 'item'
+            },
+            series: [{
+                type: 'pie',
+                radius: '70%',
+                data: [
+                    {value: 264951, name: '표면 스크래치'},
+                    {value: 4000, name: '치수 불량'},
+                    {value: 650, name: '기타'}
+                ],
+                emphasis: {
+                    itemStyle: {
+                        shadowBlur: 10,
+                        shadowOffsetX: 0,
+                        shadowColor: 'rgba(0, 0, 0, 0.5)'
+                    }
+                }
+            }]
+        });
+
+        dailyChart.setOption({
+            animation: false,
+            xAxis: {
+                type: 'category',
+                data: ['10/1', '10/2', '10/3', '10/4', '10/5']
+            },
+            yAxis: {
+                type: 'value'
+            },
+            series: [{
+                data: [650, 680, 690, 700, 650],
+                type: 'bar',
+                color: '#2196F3'
+            }]
+        });
+
+        // 로그아웃 기능
+        function logout() {
+            if (confirm('로그아웃 하시겠습니까?')) {
+                window.location.href = '/logout';
+            }
+        }
+    </script>
+</body>
+</html>

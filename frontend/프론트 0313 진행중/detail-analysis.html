@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>스마트 팩토리 관리 시스템</title>
+    <link rel="stylesheet" href="static/style.css">
+    <script src="static/script.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+    <link href="https://ai-public.creatie.ai/gen_page/tailwind-custom.css" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com/3.4.5?plugins=forms@0.5.7,typography@0.5.13,aspect-ratio@0.4.2,container-queries@0.1.1"></script>
+</head>
+<body class="bg-gray-50 font-sans">
+
+    <!-- 헤더 -->
+    <nav class="bg-white shadow-sm fixed w-full z-50">
+        <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 ml-64">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center justify-start space-x-4 pl-0">
+                    <span class="text-xl font-semibold text-gray-900 ml-0">스마트 팩토리 관리 시스템</span>
+                    <div class="flex items-center space-x-2 cursor-pointer ml-4">
+                        <span class="flex items-center cursor-pointer hover:text-custom" onclick="window.location.href='/connection-status'">
+                            <span class="w-2 h-2 rounded-full bg-red-500 mr-1"></span>
+                            <span class="text-sm text-gray-600">연결상태 확인 필요</span>
+                        </span>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button class="relative p-2 text-gray-600 hover:text-custom transition-colors cursor-pointer" onclick="openNotificationModal()">
+                        <i class="fas fa-bell text-xl"></i>
+                        <span class="absolute top-1 right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">3</span>
+                        <span class="sr-only">알림</span>
+                    </button>
+                    <div class="flex items-center space-x-3">
+                        <img class="h-8 w-8 rounded-full" src="https://creatie.ai/ai/api/search-image?query=A professional headshot of an Asian male manager" alt="Profile" style="display: none;"/>
+                        <span class="text-sm font-medium text-gray-700">김관리자</span>
+                    </div>
+                    <button class="!rounded-button bg-custom text-white px-4 py-2 text-sm font-medium hover:bg-custom/90">로그아웃</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 사이드바 -->
+    <div class="fixed left-0 top-0 h-full w-64 bg-white shadow-lg z-40">
+        <div class="p-6">
+            <div class="space-y-4">
+                <a href="/dashboard.html" class="flex items-center space-x-3 text-gray-700 hover:text-custom hover:bg-gray-50 p-3 rounded-lg">
+                    <i class="fas fa-th-large w-5"></i><span>대시보드</span>
+                </a>
+                <a href="/analysis.html" class="flex items-center justify-between space-x-3 text-custom bg-gray-50 p-3 rounded-lg cursor-pointer">
+                    <i class="fas fa-search w-5"></i><span>불량 분석</span><i class="fas fa-chevron-down"></i>
+                </a>
+                <div class="pl-6 space-y-2" id="defect-submenu">
+                    <a href="/defect-status.html" class="flex items-center space-x-3 text-gray-700 hover:text-custom hover:bg-gray-50 p-3 rounded-lg">
+                        <span>불량 현황</span>
+                    </a>
+                    <a href="/detail-analysis.html" class="flex items-center space-x-3 text-gray-700 hover:text-custom hover:bg-gray-50 p-3 rounded-lg">
+                        <span>불량 상세 분석</span>
+                    </a>
+                </div>
+                <a href="/prediction.html" class="flex items-center space-x-3 text-gray-700 hover:text-custom hover:bg-gray-50 p-3 rounded-lg">
+                    <i class="fas fa-chart-line w-5"></i><span>불량 예측</span>
+                </a>
+                <a href="/mypage.html" class="flex items-center space-x-3 text-gray-700 hover:text-custom hover:bg-gray-50 p-3 rounded-lg">
+                    <i class="fas fa-user w-5"></i><span>마이페이지</span>
+                </a>
+                <a class="flex items-center justify-between space-x-3 text-gray-700 hover:text-custom hover:bg-gray-50 p-3 rounded-lg cursor-pointer">
+                    <i class="fas fa-cog w-5"></i><span>시스템 설정</span><i class="fas fa-chevron-down"></i>
+                </a>
+                <div class="pl-6 space-y-2" id="system-submenu">
+                    <a href="/system-management.html" class="flex items-center space-x-3 text-gray-700 hover:text-custom hover:bg-gray-50 p-3 rounded-lg">
+                        <span>시스템 관리</span>
+                    </a>
+                    <a href="/criteria-setting.html" class="flex items-center space-x-3 text-custom bg-gray-50 p-3 rounded-lg">
+                        <span>불량 기준 설정</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 본문 콘텐츠 -->
+    <main class="pt-20 pb-8 px-4 sm:px-6 lg:px-8 max-w-8xl mx-auto ml-64">
+        <div class="bg-white shadow-sm rounded-lg p-6">
+            <div class="flex justify-between items-center mb-6">
+                <div class="flex items-center space-x-4"><button class="text-gray-600 hover:text-custom"><i class="fas fa-arrow-left mr-2"></i>돌아가기</button></div>
+                <div class="flex space-x-4"><button class="text-custom hover:text-custom/80"><i class="fas fa-download mr-2"></i>보고서 다운로드</button></div>
+            </div>
+            <h1 class="text-2xl font-semibold mb-6">불량 분석 결과</h1>
+            <div class="text-gray-600 mb-6">AI 분석을 통해 검출된 제품의 불량 상세 정보입니다.</div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div class="bg-gray-100 p-4 rounded-lg shadow-sm relative"><img src="https://picsum.photos/400/300" alt="불량 이미지" class="w-full h-auto rounded"/></div>
+                <div class="bg-white p-6 rounded-lg border shadow-sm">
+                    <h2 class="text-lg font-medium mb-4">불량 상세 정보</h2>
+                    <div class="space-y-4">
+                        <div class="flex justify-between"><span class="text-gray-600">날짜:</span><span>2024-02-15 14:30:00</span></div>
+                        <div class="flex justify-between"><span class="text-gray-600">불량 유형:</span><span class="text-red-500">오염+손상</span></div>
+                        <div class="flex justify-between"><span class="text-gray-600">불량 점수:</span><span>85/100</span></div>
+                        <div class="flex justify-between"><span class="text-gray-600">불량 정도:</span><span class="text-red-500">심각</span></div>
+                        <div class="mt-4"><h3 class="text-lg font-medium mb-3">조치 사항</h3><p class="text-gray-600">1. 이송 장비 점검 필요<br/>2. 작업자 교육 실시<br/>3. 품질 관리 기준 재검토</p></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function downloadReport() {
+            alert('보고서 다운로드');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>불량 기준 설정</title>
+    <link rel="stylesheet" href="static/style.css">
+    <script src="static/script.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family: '맑은 고딕', sans-serif; background:#f8f9fa; }
+
+        /* 헤더 */
+        .header {
+            height: 60px;
+            background: #2c3e50;
+            color: white;
+            padding: 0 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: fixed;
+            top:0; left:0; right:0;
+            z-index:1000;
+        }
+        .status-alert {
+            display: flex;
+            align-items: center;
+            gap:8px;
+            color: #e74c3c;
+        }
+        .status-indicator {
+            width:12px; height:12px;
+            background:#e74c3c;
+            border-radius:50%;
+            animation: blink 1.5s infinite;
+        }
+        @keyframes blink { 50% { opacity:0.5; } }
+        .header-center {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 18px;
+        }
+        .notification-panel {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .logout-btn {
+            color: white;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* 사이드바 */
+.sidebar {
+    position: fixed;
+    top: 60px;
+    left: 0;
+    bottom: 0;
+    width: 220px;
+    background: white;
+    border-right: 1px solid #ddd;
+    padding: 15px 0;
+    overflow-y: auto;
+}
+
+/* 메뉴 항목 스타일 */
+.nav-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.nav-item > a {
+    display: block;
+    padding: 10px 20px;
+    color: #444;
+    text-decoration: none;
+}
+
+.nav-item:hover > a {
+    background: #f1f3f5;
+}
+
+.submenu {
+    background: #fff;
+    list-style: none;
+    padding-left: 20px;
+    display: block; /* 항상 보이게 */
+}
+
+.submenu li a {
+    padding: 10px 20px;
+    color: #555;
+    display: block;
+}
+
+.submenu li:hover a {
+    background: #f1f3f5;
+}
+
+
+        /* 메인 콘텐츠 */
+        .main-content {
+            margin-left:240px;
+            margin-top:60px;
+            padding:30px;
+            min-height:calc(100vh - 100px);
+        }
+
+        /* 기준 설정 */
+        .settings-container {
+            max-width:800px;
+            margin:0 auto;
+            background:white;
+            padding:25px;
+            border-radius:8px;
+            box-shadow:0 2px 4px rgba(0,0,0,0.1);
+        }
+        .criteria-section {
+            margin-bottom:30px;
+        }
+        .criteria-title {
+            font-size:18px;
+            margin-bottom:20px;
+            color:#2c3e50;
+            border-bottom:2px solid #eee;
+            padding-bottom:10px;
+        }
+        .criteria-grid {
+            display:grid;
+            grid-template-columns:repeat(3, 1fr);
+            gap:20px;
+        }
+        .criteria-item {
+            margin-bottom: 15px;
+        }
+        .criteria-item label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+        }
+        .criteria-item input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .slider-group {
+            display:flex;
+            align-items:center;
+            gap:15px;
+            margin:15px 0;
+        }
+        .slider {
+            flex: 1;
+            height: 6px;
+            background: #ddd;
+            border-radius: 3px;
+            -webkit-appearance: none;
+        }
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: #2c3e50;
+            border-radius: 50%;
+        }
+        .slider-value {
+            width:60px;
+            padding:8px;
+            border:1px solid #ddd;
+            border-radius:4px;
+            text-align:center;
+        }
+        .button-group {
+            display:flex;
+            justify-content:flex-end;
+            gap:10px;
+            margin-top:30px;
+        }
+        .btn {
+            padding:10px 25px;
+            border-radius:4px;
+            cursor:pointer;
+        }
+        .btn-cancel {
+            background:#f8f9fa;
+            border:1px solid #ddd;
+        }
+        .btn-apply {
+            background:#2c3e50;
+            color:white;
+            border:none;
+        }
+        .sidebar {
+    width:240px;
+    background:#fff;
+    position:fixed;
+    top:60px; bottom:0; left:0;
+    border-right:1px solid #ddd;
+    padding:20px 0;
+}
+.nav-menu { list-style:none; }
+.nav-item { position:relative; }
+.nav-item > a {
+    display:block;
+    padding:12px 25px;
+    color:#555;
+    text-decoration:none;
+    transition:0.3s;
+}
+.nav-item:hover > a { background:#f8f9fa; }
+.submenu {
+    display:none;
+    position:absolute;
+    left:0; top:100%;
+    background:#fff;
+    min-width:240px;
+    border-radius:6px;
+    box-shadow:0 4px 12px rgba(0,0,0,0.15);
+    animation: slideDown 0.3s;
+}
+@keyframes slideDown {
+    from { opacity:0; transform: translateY(-10px); }
+    to { opacity:1; }
+}
+.nav-item:hover .submenu { display:block; }
+.submenu li a {
+    padding: 12px 25px;
+    display: block;
+    color: #444;
+    text-decoration: none;
+    transition: 0.2s;
+}
+.submenu li a:hover {
+    background: #f1f3f5;
+}
+
+    </style>
+</head>
+<body>
+    <!-- 헤더 -->
+    <header class="header">
+        <div class="status-alert">
+            <div class="status-indicator"></div>
+            <span>연결상태 확인 필요</span>
+        </div>
+        <div class="header-center">스마트 팩토리 관리 시스템</div>
+        <div class="notification-panel">
+            <i class="fas fa-bell"></i>
+            <span>김관리자</span>
+            <a href="#" class="logout-btn" onclick="logout()">로그아웃</a>
+        </div>
+    </header>
+
+    <!-- 네비게이션 -->
+    <nav class="sidebar">
+        <ul class="nav-menu">
+            <li class="nav-item"><a href="dashboard.html">대시보드</a></li>
+            <li class="nav-item">
+                <a href="analysis.html">불량분석</a>
+                <ul class="submenu">
+                    <li><a href="status.html">불량 현황</a></li>
+                    <li><a href="detail-analysis.html">불량 상세분석</a></li>
+                </ul>
+            </li>
+            <li class="nav-item"><a href="prediction.html">불량예측</a></li>
+            <li class="nav-item"><a href="mypage.html">마이페이지</a></li>
+            <li class="nav-item">
+                <a href="system-management.html">시스템설정</a>
+                <ul class="submenu">
+                    <li><a href="system-management.html">시스템 관리</a></li>
+                    <li><a href="criteria-setting.html">불량기준설정</a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+
+
+    <!-- 메인 콘텐츠 -->
+    <main class="main-content">
+        <div class="settings-container">
+            <!-- 표면 불량 기준 -->
+            <div class="criteria-section">
+                <div class="criteria-title">표면 불량 기준</div>
+                <div class="criteria-grid">
+                    <div class="criteria-item">
+                        <label>오염 면적 기준 (mm²)</label>
+                        <input type="text" value="2.5">
+                    </div>
+                    <div class="criteria-item">
+                        <label>스크래치 길이 기준 (mm)</label>
+                        <input type="text" value="1.0">
+                    </div>
+                    <div class="criteria-item">
+                        <label>색상 편차 허용 범위 (%)</label>
+                        <input type="text" value="5">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 치수 불량 기준 -->
+            <div class="criteria-section">
+                <div class="criteria-title">치수 불량 기준</div>
+                <div class="criteria-grid">
+                    <div class="criteria-item">
+                        <label>길이 허용 오차 (mm)</label>
+                        <input type="text">
+                    </div>
+                    <div class="criteria-item">
+                        <label>너비 허용 오차 (mm)</label>
+                        <input type="text">
+                    </div>
+                    <div class="criteria-item">
+                        <label>두께 허용 오차 (mm)</label>
+                        <input type="text">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 품질 등급 기준 (캡쳐 내용에서 추가) -->
+            <div class="criteria-section">
+                <div class="criteria-title">품질 등급 기준</div>
+                <div class="criteria-grid">
+                    <div class="criteria-item">
+                        <label>A등급 기준 (불량률)</label>
+                        <input type="text" value="0.1">
+                    </div>
+                    <div class="criteria-item">
+                        <label>B등급 기준 (불량률)</label>
+                        <input type="text" value="0.5">
+                    </div>
+                    <div class="criteria-item">
+                        <label>C등급 기준 (불량률)</label>
+                        <input type="text" value="1.0">
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI 검사 설정 -->
+            <div class="criteria-section">
+                <div class="criteria-title">AI 검사 민감도 설정</div>
+                <div class="slider-group">
+                    <label>검출 민감도</label>
+                    <input type="range" class="slider" min="1" max="10" value="7" id="sensitivitySlider">
+                    <input type="number" class="slider-value" id="sensitivityValue" value="7">
+                </div>
+                <div class="slider-group">
+                    <label>오검지 방지 수준</label>
+                    <input type="range" class="slider" min="1" max="10" value="8" id="falseSlider">
+                    <input type="number" class="slider-value" id="falseValue" value="8">
+                </div>
+            </div>
+
+            <!-- 버튼 그룹 -->
+            <div class="button-group">
+                <button class="btn btn-cancel" onclick="toggleEditMode(false)">취소</button>
+                <button class="btn btn-apply" onclick="saveSettings()">적용</button>
+                <button class="btn btn-apply" onclick="toggleEditMode(true)" id="editBtn" style="display:none;">수정</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // 슬라이더-숫자 동기화
+        const sensitivitySlider = document.getElementById('sensitivitySlider');
+        const sensitivityValue = document.getElementById('sensitivityValue');
+        const falseSlider = document.getElementById('falseSlider');
+        const falseValue = document.getElementById('falseValue');
+
+        sensitivitySlider.oninput = () => sensitivityValue.value = sensitivitySlider.value;
+        sensitivityValue.oninput = () => sensitivitySlider.value = sensitivityValue.value;
+        falseSlider.oninput = () => falseValue.value = falseSlider.value;
+        falseValue.oninput = () => falseSlider.value = falseValue.value;
+
+        // 수정 모드 토글
+        function toggleEditMode(enable) {
+            const inputs = document.querySelectorAll('input:not([type="range"])');
+            const applyBtn = document.querySelector('.btn-apply');
+            const cancelBtn = document.querySelector('.btn-cancel');
+            const editBtn = document.getElementById('editBtn');
+
+            if(enable) {
+                inputs.forEach(input => input.removeAttribute('readonly'));
+                applyBtn.style.display = 'inline-block';
+                cancelBtn.style.display = 'inline-block';
+                editBtn.style.display = 'none';
+            } else {
+                inputs.forEach(input => input.setAttribute('readonly', true));
+                applyBtn.style.display = 'none';
+                cancelBtn.style.display = 'none';
+                editBtn.style.display = 'inline-block';
+            }
+        }
+
+        // 설정 저장
+        function saveSettings() {
+            if(confirm('변경 사항을 저장하시겠습니까?')) {
+                toggleEditMode(false);
+            }
+        }
+
+        // 로그아웃
+        function logout() {
+            if(confirm('로그아웃 하시겠습니까?')) {
+                window.location.href = '/logout';
+            }
+        }
+
+       // 페이지 이동 로직
+document.querySelectorAll('.menu-item, .sub-menu div').forEach(item => {
+    item.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const pageMapping = {
+            '대시보드': 'dashboard.html',
+            '불량분석': 'analysis.html',
+            '불량예측': 'prediction.html',
+            '마이페이지': 'mypage.html',
+            '시스템관리': 'system-management.html',
+            '불량기준설정': 'criteria-setting.html',
+            '회원관리': '06_Member_Management.html'
+        };
+        
+        // 클릭된 메뉴의 data-page 속성값에 해당하는 페이지로 이동
+        const pageName = this.dataset.page;
+        if (pageMapping[pageName]) {
+            window.location.href = pageMapping[pageName];
+        }
+    });
+});
+    </script>
+</body>
+</html>
