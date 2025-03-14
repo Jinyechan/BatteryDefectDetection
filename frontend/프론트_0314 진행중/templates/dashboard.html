@@ -1,0 +1,312 @@
+<!-- templates/dashboard.html -->
+{% extends "base.html" %}
+
+{% block title %}대시보드{% endblock %}
+
+{% block content %}
+<style>
+    /* 메인 콘텐츠 */
+    .main-content {
+        margin-left: 240px;
+        margin-top: 100px !important;
+        padding: 30px;
+        min-height: calc(100vh - 100px);
+        background: #fff;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    /* 메트릭 카드 */
+    .metric-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 30px;
+        margin-bottom: 30px;
+    }
+
+    .metric-card {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        padding: 25px;
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .metric-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    .metric-title {
+        font-size: 16px;
+        color: #6c757d;
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+
+    .metric-value {
+        font-size: 32px;
+        font-weight: 700;
+        color: #2c3e50;
+    }
+
+    .chart-container {
+        display: flex;
+        justify-content: space-between;
+        gap: 30px;
+        margin-bottom: 30px;
+    }
+
+    .chart-box {
+        width: 48%;
+        min-width: 450px;
+        background: white;
+        padding: 25px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .chart-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .chart-header select {
+        padding: 8px 16px;
+        font-size: 14px;
+        border-radius: 6px;
+        border: 1px solid #ddd;
+        background-color: #f1f3f5;
+        color: #333;
+    }
+
+    .chart-header select:hover {
+        border-color: #3498db;
+    }
+
+    /* 로그 테이블 */
+    .log-table {
+        width: 100%;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        border-collapse: collapse;
+    }
+
+    .log-table th, .log-table td {
+        padding: 12px;
+        border-bottom: 1px solid #eee;
+        text-align: left;
+        font-size: 14px;
+        color: #555;
+    }
+
+    .log-table th {
+        background: #f8f9fa;
+        font-weight: 600;
+    }
+
+    .log-table tr:hover {
+        background: #f1f3f5;
+    }
+
+    .refresh-btn {
+        padding: 8px 18px;
+        background-color: #3498db;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    .refresh-btn:hover {
+        background-color: #2980b9;
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 1024px) {
+        .chart-container {
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .metric-grid {
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+    }
+
+    /* 작은 화면에서 카드와 차트 크기 조정 */
+    @media (max-width: 768px) {
+        .main-content {
+            margin-left: 0;
+            padding: 20px;
+        }
+
+        .metric-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .chart-box {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="metric-grid">
+    <div class="metric-card" onclick="location.href='{{ url_for('analysis') }}';">
+        <div class="metric-title">현재 불량률</div>
+        <div class="metric-value">2.8%</div>
+        <div class="metric-desc">전일 대비 0.5% 감소</div>
+    </div>
+    <div class="metric-card" onclick="location.href='{{ url_for('analysis') }}';">
+        <div class="metric-title">금일 감지된 불량</div>
+        <div class="metric-value">127건</div>
+        <div class="metric-desc">목표치 150건 이하</div>
+    </div>
+    <div class="metric-card" onclick="location.href='{{ url_for('analysis') }}';">
+        <div class="metric-title">이상 현상 알림</div>
+        <div class="metric-value">12건</div>
+        <div class="metric-desc">1시간 이내 3건 발생</div>
+    </div>
+</div>
+
+<!-- 불량 유형별 현황 차트 박스 -->
+<div class="chart-container">
+    <div class="chart-box">
+        <div class="chart-header">
+            <h3>불량 유형별 현황</h3>
+            <select>
+                <option value="day">일간</option>
+                <option value="week">주간</option>
+                <option value="month">월간</option>
+            </select>
+        </div>
+        <canvas id="typeChart"></canvas>
+    </div>
+
+    <!-- 시간대별 불량 추이 차트 박스 -->
+    <div class="chart-box">
+        <div class="chart-header">
+            <h3>시간대별 불량 추이</h3>
+            <select>
+                <option value="3">3시간</option>
+                <option value="6">6시간</option>
+                <option value="12">12시간</option>
+                <option value="24">24시간</option>
+            </select>
+        </div>
+        <canvas id="trendChart"></canvas>
+    </div>
+</div>
+
+<div class="log-header">
+    <h3>최근 감지된 불량 로그</h3>
+    <button class="refresh-btn" onclick="refreshLogs()">새로고침</button>
+</div>
+
+<table class="log-table">
+    <thead>
+        <tr>
+            <th>불량 유형</th>
+            <th>날짜</th>
+            <th>불량 점수 / 불량 정도</th>
+        </tr>
+    </thead>
+    <tbody id="logBody">
+        <tr class="log-item" onclick="goToDetailPage('오염', '2024-02-15', '92점 심각')">
+            <td>오염</td>
+            <td>2024-02-15</td>
+            <td class="severity-high">92점 심각</td>
+        </tr>
+        <tr class="log-item" onclick="goToDetailPage('오염+손상', '2024-02-14', '78점 경미')">
+            <td>오염+손상</td>
+            <td>2024-02-14</td>
+            <td class="severity-medium">78점 경미</td>
+        </tr>
+    </tbody>
+</table>
+
+<script>
+    // 차트 데이터 (한 번만 정의)
+    const chartData = {
+        type: {
+            day: [50, 30, 20],
+            week: [300, 150, 80],
+            month: [150, 100, 50]
+        },
+        trend: {
+            3: [12, 14, 16],
+            6: [10, 13, 17, 20, 18, 14],
+            12: [8, 12, 14, 11, 13, 9, 7, 6, 8, 12, 11, 14],
+            24: [3, 5, 6, 4, 5, 8, 12, 11, 13, 10, 9, 7, 6, 5, 7, 8, 9, 10, 11, 8, 9, 6, 4, 7]
+        }
+    };
+
+    // 색상 배열 정의
+    const typeColors = ['#e74c3c', '#3498db', '#f1c40f'];
+
+    // 도넛 차트 업데이트
+    const typeCtx = document.getElementById('typeChart').getContext('2d');
+    const typeChart = new Chart(typeCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['오염', '손상', '오염+손상'],
+            datasets: [{
+                data: chartData.type.day,
+                backgroundColor: typeColors
+            }]
+        },
+        options: { responsive: true, plugins: { legend: { position: 'top' } } }
+    });
+
+    // 시간대별 불량 추이 차트
+    const trendCtx = document.getElementById('trendChart').getContext('2d');
+    const trendChart = new Chart(trendCtx, {
+        type: 'line',
+        data: {
+            labels: ['00시', '04시', '08시', '12시', '16시', '20시'],
+            datasets: [{
+                label: '불량 건수',
+                data: chartData.trend[6],
+                borderColor: '#2ecc71',
+                backgroundColor: 'rgba(46,204,113,0.1)',
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true
+        }
+    });
+
+    // 유형별 차트 데이터 업데이트
+    document.getElementById('typePeriod').addEventListener('change', function () {
+        const period = this.value;
+        typeChart.data.datasets[0].data = chartData.type[period];
+        typeChart.update();
+    });
+
+    // 시간대별 차트 데이터 업데이트
+    document.getElementById('timePeriod').addEventListener('change', function () {
+        const period = parseInt(this.value);
+        const labels = Array.from({ length: period }, (_, i) => `${(24 / period) * i}시`);
+        trendChart.data.labels = labels;
+        trendChart.data.datasets[0].data = chartData.trend[period];
+        trendChart.update();
+    });
+
+    // 새로고침 함수
+    function refreshLogs() {
+        const newLog = `<tr>
+            <td>손상</td>
+            <td>${new Date().toISOString().split('T')[0]}</td>
+            <td class="severity-low">56점 경미</td>
+        </tr>`;
+        document.getElementById('logBody').insertAdjacentHTML('afterbegin', newLog);
+    }
+</script>
+{% endblock %}

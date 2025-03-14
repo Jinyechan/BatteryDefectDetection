@@ -1,0 +1,249 @@
+<!-- templates/analysis.html -->
+{% extends "base.html" %}
+
+{% block title %}불량 분석{% endblock %}
+
+{% block content %}
+<head>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet"/>
+    <link href="https://ai-public.creatie.ai/gen_page/tailwind-custom.css" rel="stylesheet"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
+    <script src="https://cdn.tailwindcss.com/3.4.5?plugins=forms@0.5.7,typography@0.5.13,aspect-ratio@0.4.2,container-queries@0.1.1"></script>
+    <script src="https://ai-public.creatie.ai/gen_page/tailwind-config.min.js" data-color="#000000" data-border-radius="small"></script>
+</head>
+
+<main class="main-content">
+    <div class="mb-6">
+        <div class="flex items-center justify-between w-full">
+            <button class="px-3 py-2 text-sm font-medium rounded-lg bg-custom text-white flex-1 text-center max-w-[100px]">전체</button>
+            <button class="px-3 py-2 text-sm font-medium rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 flex-1 text-center max-w-[100px]">오염</button>
+            <button class="px-3 py-2 text-sm font-medium rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 flex-1 text-center whitespace-nowrap max-w-[100px]">오염+손상</button>
+            <select class="px-4 py-2 text-sm font-medium rounded-lg border border-gray-300 bg-white text-gray-700 w-28">
+                <option>일간</option>
+                <option>주간</option>
+                <option>월간</option>
+            </select>
+            <div class="flex items-center space-x-2">
+                <button class="px-4 py-2 text-sm font-medium rounded-lg bg-custom text-white hover:bg-custom/90 flex items-center">
+                    <i class="fas fa-print mr-2"></i>인쇄
+                </button>
+                <button class="px-4 py-2 text-sm font-medium rounded-lg bg-white border border-custom text-custom hover:bg-gray-50 flex items-center">
+                    <i class="fas fa-download mr-2"></i>파일 다운로드
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">불량 유형 분포</h3>
+            <div id="donutChart" style="height: 400px;"></div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">불량률 추이</h3>
+            <div id="barChart" style="height: 400px;"></div>
+        </div>
+    </div>
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-medium text-gray-900">불량 로그</h3>
+            <div class="flex items-center space-x-4">
+                <div class="text-sm text-gray-700">총 <span class="font-medium">97</span>개 항목 중 <span class="font-medium">1-10</span></div>
+            </div>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead>
+                    <tr>
+                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase">날짜</th>
+                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase">불량 번호</th>
+                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase">불량 유형</th>
+                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase">불량 점수</th>
+                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase">불량 정도</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    <tr class="hover:bg-gray-50 cursor-pointer">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">2024-02-15</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">#1024</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">오염</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">92점</td>
+                        <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">심각</span></td>
+                    </tr>
+                    <tr class="hover:bg-gray-50 cursor-pointer">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">2024-02-15</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">#1023</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">오염+손상</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">88점</td>
+                        <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">심각</span></td>
+                    </tr>
+                    <tr class="hover:bg-gray-50 cursor-pointer">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">2024-02-14</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">#1022</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">오염</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">75점</td>
+                        <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">주의</span></td>
+                    </tr>
+                    <tr class="hover:bg-gray-50 cursor-pointer">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">2024-02-14</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">#1021</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">오염+손상</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">82점</td>
+                        <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">심각</span></td>
+                    </tr>
+                    <tr class="hover:bg-gray-50 cursor-pointer">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">2024-02-13</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">#1020</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">오염</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">68점</td>
+                        <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">주의</span></td>
+                    </tr>
+                    <tr class="hover:bg-gray-50 cursor-pointer">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">2024-02-13</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">#1019</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">오염+손상</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">85점</td>
+                        <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">심각</span></td>
+                    </tr>
+                    <tr class="hover:bg-gray-50 cursor-pointer">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">2024-02-12</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">#1018</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">오염</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">72점</td>
+                        <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">주의</span></td>
+                    </tr>
+                    <tr class="hover:bg-gray-50 cursor-pointer">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">2024-02-12</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">#1017</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">오염+손상</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">78점</td>
+                        <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">주의</span></td>
+                    </tr>
+                    <tr class="hover:bg-gray-50 cursor-pointer">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">2024-02-11</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">#1016</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">오염</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">90점</td>
+                        <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">심각</span></td>
+                    </tr>
+                    <tr class="hover:bg-gray-50 cursor-pointer">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">2024-02-11</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">#1015</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">오염+손상</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">83점</td>
+                        <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">심각</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="mt-4 flex items-center justify-between">
+            <div class="flex space-x-2 justify-center w-full mt-8">
+                <button class="px-3 py-1 border rounded text-sm">이전</button>
+                <button class="px-3 py-1 bg-custom text-white rounded text-sm">1</button>
+                <button class="px-3 py-1 border rounded text-sm">다음</button>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div id="notificationModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="relative max-w-md mx-auto mt-20 bg-white rounded-lg shadow-lg">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-medium">알림</h3>
+                <button onclick="closeNotificationModal()" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="space-y-4">
+                <a href="/quality-issue" class="block p-4 border rounded-lg hover:bg-gray-50">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="font-medium text-gray-900">품질 이상 감지</p>
+                            <p class="text-sm text-gray-500">생산라인 3에서 불량품 발생</p>
+                        </div>
+                        <span class="text-xs text-gray-400">5분 전</span>
+                    </div>
+                </a>
+                <a href="/maintenance" class="block p-4 border rounded-lg hover:bg-gray-50">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="font-medium text-gray-900">설비 점검 필요</p>
+                            <p class="text-sm text-gray-500">설비 A의 정기 점검 시기</p>
+                        </div>
+                        <span class="text-xs text-gray-400">30분 전</span>
+                    </div>
+                </a>
+                <a href="/system-alert" class="block p-4 border rounded-lg hover:bg-gray-50">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="font-medium text-gray-900">시스템 업데이트</p>
+                            <p class="text-sm text-gray-500">새로운 버전 업데이트 필요</p>
+                        </div>
+                        <span class="text-xs text-gray-400">1시간 전</span>
+                    </div>
+                </a>
+                <a href="/production-status" class="block p-4 border rounded-lg hover:bg-gray-50">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="font-medium text-gray-900">생산량 목표 달성</p>
+                            <p class="text-sm text-gray-500">금일 목표 생산량 달성</p>
+                        </div>
+                        <span class="text-xs text-gray-400">2시간 전</span>
+                    </div>
+                </a>
+                <a href="/inventory" class="block p-4 border rounded-lg hover:bg-gray-50">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="font-medium text-gray-900">재고 부족 경고</p>
+                            <p class="text-sm text-gray-500">자재 B의 재고량 critical</p>
+                        </div>
+                        <span class="text-xs text-gray-400">3시간 전</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const donutChart = echarts.init(document.getElementById('donutChart'));
+    donutChart.setOption({
+        tooltip: { trigger: 'item' },
+        legend: { orient: 'vertical', right: 10, top: 'center' },
+        series: [{
+            name: '불량유형',
+            type: 'pie',
+            radius: ['50%', '70%'],
+            avoidLabelOverlap: false,
+            itemStyle: { borderRadius: 10, borderColor: '#fff', borderWidth: 2 },
+            label: { show: false },
+            emphasis: { label: { show: true, fontSize: '14', fontWeight: 'bold' } },
+            data: [{ value: 60, name: '오염' }, { value: 40, name: '오염+손상' }]
+        }]
+    });
+
+    const barChart = echarts.init(document.getElementById('barChart'));
+    barChart.setOption({
+        tooltip: { trigger: 'axis' },
+        xAxis: { type: 'category', data: ['2/9', '2/10', '2/11', '2/12', '2/13', '2/14', '2/15'] },
+        yAxis: { type: 'value', axisLabel: { formatter: '{value}%' } },
+        series: [{
+            data: [2.1, 2.4, 1.8, 2.8, 2.3, 2.9, 2.5],
+            type: 'bar',
+            barWidth: '40%',
+            itemStyle: { color: '#1E40AF', borderRadius: [10, 10, 0, 0] }
+        }]
+    });
+
+    window.addEventListener('resize', function() {
+        donutChart.resize();
+        barChart.resize();
+    });
+
+    function openNotificationModal() {
+        document.getElementById('notificationModal').classList.remove('hidden');
+    }
+
+    function closeNotificationModal() {
+        document.getElementById('notificationModal').classList.add('hidden');
+    }
+</script>
+{% endblock %}

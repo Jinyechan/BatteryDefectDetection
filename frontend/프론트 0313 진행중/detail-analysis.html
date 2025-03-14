@@ -1,115 +1,267 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>스마트 팩토리 관리 시스템</title>
-    <link rel="stylesheet" href="static/style.css">
-    <script src="static/script.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet"/>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
-    <link href="https://ai-public.creatie.ai/gen_page/tailwind-custom.css" rel="stylesheet"/>
-    <script src="https://cdn.tailwindcss.com/3.4.5?plugins=forms@0.5.7,typography@0.5.13,aspect-ratio@0.4.2,container-queries@0.1.1"></script>
-</head>
-<body class="bg-gray-50 font-sans">
+<!-- templates/detail-analysis.html -->
+{% extends "base.html" %}
 
-    <!-- 헤더 -->
-    <nav class="bg-white shadow-sm fixed w-full z-50">
-        <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 ml-64">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center justify-start space-x-4 pl-0">
-                    <span class="text-xl font-semibold text-gray-900 ml-0">스마트 팩토리 관리 시스템</span>
-                    <div class="flex items-center space-x-2 cursor-pointer ml-4">
-                        <span class="flex items-center cursor-pointer hover:text-custom" onclick="window.location.href='/connection-status'">
-                            <span class="w-2 h-2 rounded-full bg-red-500 mr-1"></span>
-                            <span class="text-sm text-gray-600">연결상태 확인 필요</span>
-                        </span>
-                    </div>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <button class="relative p-2 text-gray-600 hover:text-custom transition-colors cursor-pointer" onclick="openNotificationModal()">
-                        <i class="fas fa-bell text-xl"></i>
-                        <span class="absolute top-1 right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">3</span>
-                        <span class="sr-only">알림</span>
-                    </button>
-                    <div class="flex items-center space-x-3">
-                        <img class="h-8 w-8 rounded-full" src="https://creatie.ai/ai/api/search-image?query=A professional headshot of an Asian male manager" alt="Profile" style="display: none;"/>
-                        <span class="text-sm font-medium text-gray-700">김관리자</span>
-                    </div>
-                    <button class="!rounded-button bg-custom text-white px-4 py-2 text-sm font-medium hover:bg-custom/90">로그아웃</button>
+{% block title %}불량 상세분석{% endblock %}
+
+{% block content %}
+<head>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet"/>
+    <link href="https://ai-public.creatie.ai/gen_page/tailwind-custom.css" rel="stylesheet"/>
+    <style>
+        .range-with-value::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: currentColor;
+            cursor: pointer;
+            position: relative;
+        }
+        .range-with-value::-webkit-slider-thumb::after {
+            content: attr(title);
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #666;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        .range-with-value::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: currentColor;
+            cursor: pointer;
+            position: relative;
+        }
+        .range-with-value::-moz-range-thumb::after {
+            content: attr(title);
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #666;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
+    <script src="https://cdn.tailwindcss.com/3.4.5?plugins=forms@0.5.7,typography@0.5.13,aspect-ratio@0.4.2,container-queries@0.1.1"></script>
+    <script src="https://ai-public.creatie.ai/gen_page/tailwind-config.min.js" data-color="#000000" data-border-radius="small"></script>
+</head>
+
+<main class="pt-20 pb-8 px-6 max-w-6xl mx-auto ml-[240px] min-h-screen">
+    <div class="bg-white shadow-sm rounded-lg p-6 w-full">
+        <div class="flex justify-between items-center mb-6">
+            <div class="flex items-center space-x-4"><button class="text-gray-600 hover:text-custom"><i class="fas fa-arrow-left mr-2"></i>돌아가기</button></div>
+            <div class="flex space-x-4"><button class="text-custom hover:text-custom/80"><i class="fas fa-download mr-2"></i>보고서 다운로드</button></div>
+        </div>
+        <h1 class="text-2xl font-semibold mb-6">불량 분석 결과</h1>
+        <div class="text-gray-600 mb-6">AI 분석을 통해 검출된 제품의 불량 상세 정보입니다.</div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div class="bg-gray-100 p-4 rounded-lg shadow-sm relative"><img src="https://picsum.photos/400/300" alt="불량 이미지" class="w-full h-auto rounded"/></div>
+            <div class="bg-white p-6 rounded-lg border shadow-sm">
+                <h2 class="text-lg font-medium mb-4">불량 상세 정보</h2>
+                <div class="space-y-4">
+                    <div class="flex justify-between"><span class="text-gray-600">날짜:</span><span>2024-02-15 14:30:00</span></div>
+                    <div class="flex justify-between"><span class="text-gray-600">불량 유형:</span><span class="text-red-500">오염+손상</span></div>
+                    <div class="flex justify-between"><span class="text-gray-600">불량 점수:</span><span>85/100</span></div>
+                    <div class="flex justify-between"><span class="text-gray-600">불량 정도:</span><span class="text-red-500">심각</span></div>
+                    <div class="mt-4"><h3 class="text-lg font-medium mb-3">조치 사항</h3><p class="text-gray-600">1. 이송 장비 점검 필요<br/>2. 작업자 교육 실시<br/>3. 품질 관리 기준 재검토</p></div>
                 </div>
             </div>
         </div>
-    </nav>
-
-    <!-- 사이드바 -->
-    <div class="fixed left-0 top-0 h-full w-64 bg-white shadow-lg z-40">
-        <div class="p-6">
-            <div class="space-y-4">
-                <a href="/dashboard.html" class="flex items-center space-x-3 text-gray-700 hover:text-custom hover:bg-gray-50 p-3 rounded-lg">
-                    <i class="fas fa-th-large w-5"></i><span>대시보드</span>
-                </a>
-                <a href="/analysis.html" class="flex items-center justify-between space-x-3 text-custom bg-gray-50 p-3 rounded-lg cursor-pointer">
-                    <i class="fas fa-search w-5"></i><span>불량 분석</span><i class="fas fa-chevron-down"></i>
-                </a>
-                <div class="pl-6 space-y-2" id="defect-submenu">
-                    <a href="/defect-status.html" class="flex items-center space-x-3 text-gray-700 hover:text-custom hover:bg-gray-50 p-3 rounded-lg">
-                        <span>불량 현황</span>
-                    </a>
-                    <a href="/detail-analysis.html" class="flex items-center space-x-3 text-gray-700 hover:text-custom hover:bg-gray-50 p-3 rounded-lg">
-                        <span>불량 상세 분석</span>
-                    </a>
+        <div class="mt-8 border-t pt-6">
+            <h2 class="text-xl font-semibold mb-4">불량 로그 및 조치 입력</h2>
+            <div class="space-y-6">
+                <div class="bg-white rounded-lg border shadow-sm p-4">
+                    <h3 class="text-lg font-medium mb-3">금일 불량 로그</h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">시간</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">생산 라인</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">로그 내용</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">심각도</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">14:30:00</td>
+                                    <td class="px-6 py-4 text-sm text-gray-900">라인1</td>
+                                    <td class="px-6 py-4 text-sm text-gray-900">불량 제품 검출</td>
+                                    <td class="px-6 py-4"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">심각</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">14:29:55</td>
+                                    <td class="px-6 py-4 text-sm text-gray-900">라인2</td>
+                                    <td class="px-6 py-4 text-sm text-gray-900">생산라인 이상 감지</td>
+                                    <td class="px-6 py-4"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">주의</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-                <a href="/prediction.html" class="flex items-center space-x-3 text-gray-700 hover:text-custom hover:bg-gray-50 p-3 rounded-lg">
-                    <i class="fas fa-chart-line w-5"></i><span>불량 예측</span>
-                </a>
-                <a href="/mypage.html" class="flex items-center space-x-3 text-gray-700 hover:text-custom hover:bg-gray-50 p-3 rounded-lg">
-                    <i class="fas fa-user w-5"></i><span>마이페이지</span>
-                </a>
-                <a class="flex items-center justify-between space-x-3 text-gray-700 hover:text-custom hover:bg-gray-50 p-3 rounded-lg cursor-pointer">
-                    <i class="fas fa-cog w-5"></i><span>시스템 설정</span><i class="fas fa-chevron-down"></i>
-                </a>
-                <div class="pl-6 space-y-2" id="system-submenu">
-                    <a href="/system-management.html" class="flex items-center space-x-3 text-gray-700 hover:text-custom hover:bg-gray-50 p-3 rounded-lg">
-                        <span>시스템 관리</span>
-                    </a>
-                    <a href="/criteria-setting.html" class="flex items-center space-x-3 text-custom bg-gray-50 p-3 rounded-lg">
-                        <span>불량 기준 설정</span>
-                    </a>
+                <div class="bg-white rounded-lg border shadow-sm p-4">
+                    <h3 class="text-lg font-medium mb-3">CAPA 관리</h3>
+                    <form class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <select class="rounded-md border-gray-300">
+                                <option>시정</option>
+                                <option>예방</option>
+                            </select>
+                            <input type="date" class="rounded-md border-gray-300"/>
+                        </div>
+                        <div>
+                            <textarea class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" rows="4" placeholder="조치 내용을 입력하세요"></textarea>
+                        </div>
+                        <div class="mt-3">
+                            <input type="text" class="block w-full rounded-md border-gray-300 bg-gray-100" placeholder="담당자명" disabled="true" value="김관리자"/>
+                        </div>
+                        <div class="mt-3">
+                            <button type="submit" class="w-full bg-custom text-white rounded-md hover:bg-custom/90 py-2 mt-4">제출</button>
+                        </div>
+                    </form>
                 </div>
+            </div>
+            <div class="mt-6 bg-gray-50 p-4 rounded-lg">
+                <h3 class="text-lg font-medium mb-3">법적 참고사항</h3>
+                <ul class="space-y-2 text-gray-600">
+                    <li>• 결함 보고: 24시간 이내 품질관리자 보고 의무</li>
+                    <li>• 문서 보관: 5년간 기록 보관 (ISO 9001)</li>
+                    <li>• 리콜 기준: 심각도 '상' 시 즉시 검토 (KC 인증)</li>
+                </ul>
             </div>
         </div>
     </div>
+</main>
 
-    <!-- 본문 콘텐츠 -->
-    <main class="pt-20 pb-8 px-4 sm:px-6 lg:px-8 max-w-8xl mx-auto ml-64">
-        <div class="bg-white shadow-sm rounded-lg p-6">
-            <div class="flex justify-between items-center mb-6">
-                <div class="flex items-center space-x-4"><button class="text-gray-600 hover:text-custom"><i class="fas fa-arrow-left mr-2"></i>돌아가기</button></div>
-                <div class="flex space-x-4"><button class="text-custom hover:text-custom/80"><i class="fas fa-download mr-2"></i>보고서 다운로드</button></div>
+<div id="notificationModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="relative max-w-md mx-auto mt-20 bg-white rounded-lg shadow-lg">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-medium">알림</h3>
+                <button onclick="closeNotificationModal()" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times"></i></button>
             </div>
-            <h1 class="text-2xl font-semibold mb-6">불량 분석 결과</h1>
-            <div class="text-gray-600 mb-6">AI 분석을 통해 검출된 제품의 불량 상세 정보입니다.</div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div class="bg-gray-100 p-4 rounded-lg shadow-sm relative"><img src="https://picsum.photos/400/300" alt="불량 이미지" class="w-full h-auto rounded"/></div>
-                <div class="bg-white p-6 rounded-lg border shadow-sm">
-                    <h2 class="text-lg font-medium mb-4">불량 상세 정보</h2>
-                    <div class="space-y-4">
-                        <div class="flex justify-between"><span class="text-gray-600">날짜:</span><span>2024-02-15 14:30:00</span></div>
-                        <div class="flex justify-between"><span class="text-gray-600">불량 유형:</span><span class="text-red-500">오염+손상</span></div>
-                        <div class="flex justify-between"><span class="text-gray-600">불량 점수:</span><span>85/100</span></div>
-                        <div class="flex justify-between"><span class="text-gray-600">불량 정도:</span><span class="text-red-500">심각</span></div>
-                        <div class="mt-4"><h3 class="text-lg font-medium mb-3">조치 사항</h3><p class="text-gray-600">1. 이송 장비 점검 필요<br/>2. 작업자 교육 실시<br/>3. 품질 관리 기준 재검토</p></div>
+            <div class="space-y-4">
+                <a href="/quality-issue" class="block p-4 border rounded-lg hover:bg-gray-50">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="font-medium text-gray-900">품질 이상 감지</p>
+                            <p class="text-sm text-gray-500">생산라인 3에서 불량품 발생</p>
+                        </div>
+                        <span class="text-xs text-gray-400">5분 전</span>
                     </div>
-                </div>
+                </a>
+                <a href="/maintenance" class="block p-4 border rounded-lg hover:bg-gray-50">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="font-medium text-gray-900">설비 점검 필요</p>
+                            <p class="text-sm text-gray-500">설비 A의 정기 점검 시기</p>
+                        </div>
+                        <span class="text-xs text-gray-400">30분 전</span>
+                    </div>
+                </a>
+                <a href="/system-alert" class="block p-4 border rounded-lg hover:bg-gray-50">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="font-medium text-gray-900">시스템 업데이트</p>
+                            <p class="text-sm text-gray-500">새로운 버전 업데이트 필요</p>
+                        </div>
+                        <span class="text-xs text-gray-400">1시간 전</span>
+                    </div>
+                </a>
+                <a href="/production-status" class="block p-4 border rounded-lg hover:bg-gray-50">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="font-medium text-gray-900">생산량 목표 달성</p>
+                            <p class="text-sm text-gray-500">금일 목표 생산량 달성</p>
+                        </div>
+                        <span class="text-xs text-gray-400">2시간 전</span>
+                    </div>
+                </a>
+                <a href="/inventory" class="block p-4 border rounded-lg hover:bg-gray-50">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="font-medium text-gray-900">재고 부족 경고</p>
+                            <p class="text-sm text-gray-500">자재 B의 재고량 critical</p>
+                        </div>
+                        <span class="text-xs text-gray-400">3시간 전</span>
+                    </div>
+                </a>
             </div>
         </div>
-    </main>
+    </div>
+</div>
 
-    <script>
-        function downloadReport() {
-            alert('보고서 다운로드');
-        }
-    </script>
-</body>
-</html>
+<script>
+    function syncRangeWithNumber(rangeId, numberId) {
+        const range = document.querySelector(rangeId);
+        const number = document.querySelector(numberId);
+        range.addEventListener('input', function(e) {
+            number.value = e.target.value;
+        });
+        number.addEventListener('input', function(e) {
+            range.value = e.target.value;
+        });
+    }
+    syncRangeWithNumber('#id-108', '#sensitivity-number');
+    syncRangeWithNumber('#id-113', '#false-detection-number');
+
+    const predictionChart = echarts.init(document.getElementById('predictionChart'));
+    predictionChart.setOption({
+        tooltip: { trigger: 'axis' },
+        legend: { data: ['예측 불량률', '실제 불량률'] },
+        xAxis: { type: 'category', data: ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00'] },
+        yAxis: { type: 'value', axisLabel: { formatter: '{value}%' } },
+        series: [{
+            name: '예측 불량률',
+            type: 'line',
+            smooth: true,
+            data: [1.2, 1.5, 1.8, 2.1, 1.5, 2.8, 2.5],
+            itemStyle: { color: '#1E40AF' }
+        }, {
+            name: '실제 불량률',
+            type: 'line',
+            smooth: true,
+            data: [1.1, 1.6, 1.7, 2.0, 1.4, 2.7, null],
+            itemStyle: { color: '#10B981' }
+        }]
+    });
+
+    const defectTypeChart = echarts.init(document.getElementById('defectTypeChart'));
+    defectTypeChart.setOption({
+        tooltip: { trigger: 'item' },
+        legend: { orient: 'vertical', right: 10, top: 'center' },
+        series: [{
+            name: '예측 불량 유형',
+            type: 'pie',
+            radius: ['50%', '70%'],
+            avoidLabelOverlap: false,
+            itemStyle: { borderRadius: 10, borderColor: '#fff', borderWidth: 2 },
+            label: { show: false },
+            emphasis: { label: { show: true, fontSize: '14', fontWeight: 'bold' } },
+            data: [{ value: 60, name: '오염' }, { value: 40, name: '오염+손상' }]
+        }]
+    });
+
+    window.addEventListener('resize', function() {
+        predictionChart.resize();
+        defectTypeChart.resize();
+    });
+
+    function openNotificationModal() {
+        document.getElementById('notificationModal').classList.remove('hidden');
+    }
+
+    function closeNotificationModal() {
+        document.getElementById('notificationModal').classList.add('hidden');
+    }
+</script>
+{% endblock %}
