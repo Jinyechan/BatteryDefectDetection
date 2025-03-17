@@ -19,7 +19,7 @@
         </div>
         <div class="header-center">스마트 팩토리 관리 시스템</div>
         <div class="notification-panel">
-            <div class="notification-icon" onclick="toggleNotificationModal()">🔔</div>
+            <i class="fas fa-bell"></i>
             <a href="#" class="logout-btn" onclick="logout()">로그아웃</a>
         </div>
     </header>
@@ -35,7 +35,6 @@
                 <ul class="submenu">
                     <li><a href="{{ url_for('analysis') }}" class="color-white">불량 현황</a></li>
                     <li><a href="{{ url_for('detail_analysis') }}" class="color-white">불량 상세분석</a></li>
-                    <li><a href="{{ url_for('monitoring') }}" class="color-white">실시간 모니터링</a></li>
                 </ul>
             </li>
             <li class="nav-item"><a href="{{ url_for('prediction') }}" class="color-white">불량예측</a></li>
@@ -57,44 +56,6 @@
         {% block content %}{% endblock %}
     </main>
 
-    <!-- 알림 UI -->
-<div class="notification-container">
-    <div class="notification-icon" onclick="toggleNotificationModal()">🔔</div>
-</div>
-
-<!-- 모달 알림 리스트 -->
-<div class="modal-overlay" id="modalOverlay" onclick="toggleNotificationModal()"></div>
-<div class="notification-modal" id="notificationModal">
-    <div class="notification-header">
-        <span>알림</span>
-        <span style="cursor: pointer;" onclick="toggleNotificationModal()">✖</span>
-    </div>
-    <div class="notification-item">📩 이메일 알림: 시스템 점검 예정</div>
-    <div class="notification-item">⚠️ 경고: 온도 센서 이상 감지</div>
-    <div class="notification-item">✅ 보고서 전송 완료</div>
-    
-    <!-- 알림 설정 UI -->
-    <div class="notification-settings">
-        <label for="notifTime">알림 시간 설정</label>
-        <select id="notifTime">
-            <option value="즉시">즉시</option>
-            <option value="1시간마다">1시간마다</option>
-            <option value="하루 한 번">하루 한 번</option>
-        </select>
-        
-        <label for="notifType">알림 유형 선택</label>
-        <select id="notifType">
-            <option value="all">모든 알림</option>
-            <option value="warnings">경고 알림만</option>
-            <option value="emails">이메일 알림만</option>
-        </select>
-        
-        <label>
-            <input type="checkbox" id="pushNotif"> 푸시 알림 활성화
-        </label>
-    </div>
-</div>
-
     <script>
         // 로그아웃 기능
         function logout() {
@@ -113,29 +74,6 @@
                 this.classList.toggle('fa-chevron-right');
             });
         });
-
-        // 알림 드롭다운 토글
-        function toggleNotificationModal() {
-        document.getElementById("notificationModal").classList.toggle("active");
-        document.getElementById("modalOverlay").classList.toggle("active");
-    }
-
-        if (modal.classList.contains("active")) {
-            modal.style.opacity = "0";
-            modal.style.transform = "translate(-50%, -50%) scale(0.9)";
-            setTimeout(() => {
-                modal.classList.remove("active");
-                overlay.classList.remove("active");
-            }, 200); // 애니메이션 시간 후 클래스 제거
-        } else {
-            modal.classList.add("active");
-            overlay.classList.add("active");
-            setTimeout(() => {
-                modal.style.opacity = "1";
-                modal.style.transform = "translate(-50%, -50%) scale(1)";
-            }, 10); // DOM 업데이트 후 애니메이션 적용
-        }
-        
     </script>
 <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'920202fc4e42b0e2',t:'MTc0MTkzNjg1OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>

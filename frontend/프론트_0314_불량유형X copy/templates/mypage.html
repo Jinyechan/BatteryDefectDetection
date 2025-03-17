@@ -1,0 +1,162 @@
+<!-- templates/mypage.html -->
+{% extends "base.html" %}
+
+{% block title %}마이페이지{% endblock %}
+
+{% block content %}
+<style>
+    /* 메인 콘텐츠 */
+    .main-content {
+        margin-left: 240px;
+        margin-top: 60px;
+        padding: 30px;
+        min-height: calc(100vh - 100px);
+    }
+
+    /* 폼 스타일 */
+    .form-container {
+        max-width: 600px;
+        margin: 0 auto;
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .form-group {
+        margin-bottom: 20px;
+    }
+    .form-label {
+        display: block;
+        margin-bottom: 8px;
+        color: #666;
+    }
+    .form-input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background: #fff;
+    }
+    .email-group {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    .email-group input[type="text"] { flex: 1.2; }
+    .email-group span { padding: 0 5px; }
+    .email-group select { flex: 1; }
+    .phone-group {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr auto 1fr;
+        gap: 10px;
+        align-items: center;
+    }
+    .button-group {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 30px;
+    }
+    .btn {
+        padding: 10px 25px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    .btn-cancel {
+        background: #f8f9fa;
+        border: 1px solid #ddd;
+    }
+    .btn-save {
+        background: #2c3e50;
+        color: white;
+    }
+    .edit-mode .form-input {
+        background: #f8f9fa;
+        cursor: not-allowed;
+    }
+</style>
+
+<div class="form-container">
+    <div class="form-group">
+        <label class="form-label">사번</label>
+        <input type="text" class="form-input" value="EMP2024001" readonly>
+    </div>
+    
+    <div class="form-group">
+        <label class="form-label">아이디</label>
+        <input type="text" class="form-input" value="admin123" readonly>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label">이름</label>
+        <input type="text" class="form-input" value="김관리자" id="name">
+    </div>
+
+    <!-- 수정된 이메일 영역 -->
+    <div class="form-group">
+        <label class="form-label">이메일</label>
+        <div class="email-group">
+            <input type="text" class="form-input" value="admin">
+            <span>@</span>
+            <input type="text" class="form-input" value="smartfactory">
+            <select class="form-input">
+                <option>.com</option>
+                <option>.net</option>
+                <option>.org</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label">전화번호</label>
+        <div class="phone-group">
+            <input type="text" class="form-input" value="010" maxlength="3">
+            <span>-</span>
+            <input type="text" class="form-input" value="1234" maxlength="4">
+            <span>-</span>
+            <input type="text" class="form-input" value="5678" maxlength="4">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label">새 비밀번호</label>
+        <input type="password" class="form-input" id="password">
+    </div>
+
+    <div class="form-group">
+        <label class="form-label">비밀번호 확인</label>
+        <input type="password" class="form-input" id="confirmPassword">
+    </div>
+
+    <div class="button-group">
+        <button class="btn btn-cancel" onclick="toggleEditMode(false)">취소</button>
+        <button class="btn btn-save" onclick="toggleEditMode(true)">저장</button>
+        <button class="btn btn-save" onclick="toggleEditMode()" id="editBtn" style="display:none;">수정</button>
+    </div>
+</div>
+
+<script>
+    // 수정 모드 토글
+    function toggleEditMode(isSave = false) {
+        const form = document.querySelector('.form-container');
+        const inputs = document.querySelectorAll('.form-input:not([readonly])');
+        const editBtn = document.getElementById('editBtn');
+        const saveCancelGroup = document.querySelector('.button-group').children;
+
+        if (isSave) {
+            form.classList.add('edit-mode');
+            inputs.forEach(input => input.disabled = true);
+            editBtn.style.display = 'inline-block';
+            saveCancelGroup[0].style.display = 'none';
+            saveCancelGroup[1].style.display = 'none';
+        } else {
+            form.classList.remove('edit-mode');
+            inputs.forEach(input => input.disabled = false);
+            editBtn.style.display = 'none';
+            saveCancelGroup[0].style.display = 'inline-block';
+            saveCancelGroup[1].style.display = 'inline-block';
+        }
+    }
+</script>
+{% endblock %}
