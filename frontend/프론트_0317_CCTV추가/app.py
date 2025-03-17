@@ -35,6 +35,10 @@ def system_management():
 def criteria_setting():
     return render_template('criteria-setting.html')
 
+@app.route('/monitoring')
+def monitoring():
+    return render_template('monitoring.html')
+
 @app.route('/logout')
 def logout():
     # 실제 로그아웃 로직 추가 가능 (세션 종료 등)

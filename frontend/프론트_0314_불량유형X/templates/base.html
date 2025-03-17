@@ -116,26 +116,25 @@
 
         // 알림 드롭다운 토글
         function toggleNotificationModal() {
-        document.getElementById("notificationModal").classList.toggle("active");
-        document.getElementById("modalOverlay").classList.toggle("active");
-    }
-
-        if (modal.classList.contains("active")) {
-            modal.style.opacity = "0";
-            modal.style.transform = "translate(-50%, -50%) scale(0.9)";
-            setTimeout(() => {
-                modal.classList.remove("active");
-                overlay.classList.remove("active");
-            }, 200); // 애니메이션 시간 후 클래스 제거
-        } else {
-            modal.classList.add("active");
-            overlay.classList.add("active");
-            setTimeout(() => {
-                modal.style.opacity = "1";
-                modal.style.transform = "translate(-50%, -50%) scale(1)";
-            }, 10); // DOM 업데이트 후 애니메이션 적용
+            const modal = document.getElementById("notificationModal");
+            const overlay = document.getElementById("modalOverlay");
+            
+            if (modal.classList.contains("active")) {
+                modal.style.opacity = "0";
+                modal.style.transform = "translate(-50%, -50%) scale(0.9)";
+                setTimeout(() => {
+                    modal.classList.remove("active");
+                    overlay.classList.remove("active");
+                }, 200);
+            } else {
+                modal.classList.add("active");
+                overlay.classList.add("active");
+                setTimeout(() => {
+                    modal.style.opacity = "1";
+                    modal.style.transform = "translate(-50%, -50%) scale(1)";
+                }, 10);
+            }
         }
-        
     </script>
 <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'920202fc4e42b0e2',t:'MTc0MTkzNjg1OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
