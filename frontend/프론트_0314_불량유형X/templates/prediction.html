@@ -6,48 +6,94 @@
 {% block content %}
 <style>
 
-    /* 예측 섹션 */
-    .prediction-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 25px;
-        margin-bottom: 30px;
-    }
-    .chart-container {
-        background: white;
-        padding: 25px;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        overflow: hidden;
-    }
-    .chart-header {
-        margin-bottom: 20px;
-    }
-    .chart-title { font-size: 18px; color: #343a40; }
+/* ============================== */
+/* 예측 섹션 */
+/* ============================== */
 
-    /* 예측 데이터 테이블 */
-    .data-table {
-        width: 100%;
-        border-collapse: collapse;
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        margin-top: 25px;
-        table-layout: fixed;
+.prediction-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
+    margin-bottom: 30px;
+}
+
+/* ============================== */
+/* 차트 컨테이너 */
+/* ============================== */
+
+.chart-container {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.chart-header {
+    margin-bottom: 18px;
+}
+
+.chart-title {
+    font-size: 18px;
+    color: #343a40;
+    font-weight: 600;
+}
+
+/* ============================== */
+/* 예측 데이터 테이블 */
+/* ============================== */
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-top: 25px;
+    table-layout: fixed;
+}
+
+.data-table th,
+.data-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+    word-wrap: break-word;
+}
+
+.data-table th {
+    background: #f8f9fa;
+    color: #555;
+    font-weight: 600;
+}
+
+/* 예측값 강조 */
+.prediction-value {
+    color: #d63031;
+    font-weight: bold;
+}
+
+/* 테이블 호버 효과 */
+.data-table tr:hover {
+    background: #f1f3f5;
+    transition: background 0.2s ease-in-out;
+}
+
+/* ============================== */
+/* 반응형 디자인 */
+/* ============================== */
+
+@media (max-width: 768px) {
+    .prediction-grid {
+        grid-template-columns: 1fr;
     }
-    .data-table th,
-    .data-table td {
-        padding: 12px 15px;
-        text-align: left;
-        border-bottom: 1px solid #eee;
-        word-break: break-word;
+
+    .chart-container {
+        padding: 15px;
     }
-    .data-table th {
-        background: #f8f9fa;
-        color: #666;
-        font-weight: normal;
-    }
-    .prediction-value { color: #e74c3c; }
+}
+
+
 </style>
 
 <h1 style="margin-bottom: 30px;">불량 예측</h1>
@@ -106,43 +152,6 @@
     </table>
 </div>
 
-<!-- 알림 UI -->
-<div class="notification-container">
-    <div class="notification-icon" onclick="toggleNotificationModal()">🔔</div>
-</div>
-
-<!-- 모달 알림 리스트 -->
-<div class="modal-overlay" id="modalOverlay" onclick="toggleNotificationModal()"></div>
-<div class="notification-modal" id="notificationModal">
-    <div class="notification-header">
-        <span>알림</span>
-        <span style="cursor: pointer;" onclick="toggleNotificationModal()">✖</span>
-    </div>
-    <div class="notification-item">📩 이메일 알림: 시스템 점검 예정</div>
-    <div class="notification-item">⚠️ 경고: 온도 센서 이상 감지</div>
-    <div class="notification-item">✅ 보고서 전송 완료</div>
-    
-    <!-- 알림 설정 UI -->
-    <div class="notification-settings">
-        <label for="notifTime">알림 시간 설정</label>
-        <select id="notifTime">
-            <option value="즉시">즉시</option>
-            <option value="1시간마다">1시간마다</option>
-            <option value="하루 한 번">하루 한 번</option>
-        </select>
-        
-        <label for="notifType">알림 유형 선택</label>
-        <select id="notifType">
-            <option value="all">모든 알림</option>
-            <option value="warnings">경고 알림만</option>
-            <option value="emails">이메일 알림만</option>
-        </select>
-        
-        <label>
-            <input type="checkbox" id="pushNotif"> 푸시 알림 활성화
-        </label>
-    </div>
-</div>
 
 <script>
     // 예측 불량률 추이 차트

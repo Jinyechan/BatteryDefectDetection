@@ -80,44 +80,6 @@
     </div>
 </main>
 
-<!-- 알림 UI -->
-<div class="notification-container">
-    <div class="notification-icon" onclick="toggleNotificationModal()">🔔</div>
-</div>
-
-<!-- 모달 알림 리스트 -->
-<div class="modal-overlay" id="modalOverlay" onclick="toggleNotificationModal()"></div>
-<div class="notification-modal" id="notificationModal">
-    <div class="notification-header">
-        <span>알림</span>
-        <span style="cursor: pointer;" onclick="toggleNotificationModal()">✖</span>
-    </div>
-    <div class="notification-item">📩 이메일 알림: 시스템 점검 예정</div>
-    <div class="notification-item">⚠️ 경고: 온도 센서 이상 감지</div>
-    <div class="notification-item">✅ 보고서 전송 완료</div>
-    
-    <!-- 알림 설정 UI -->
-    <div class="notification-settings">
-        <label for="notifTime">알림 시간 설정</label>
-        <select id="notifTime">
-            <option value="즉시">즉시</option>
-            <option value="1시간마다">1시간마다</option>
-            <option value="하루 한 번">하루 한 번</option>
-        </select>
-        
-        <label for="notifType">알림 유형 선택</label>
-        <select id="notifType">
-            <option value="all">모든 알림</option>
-            <option value="warnings">경고 알림만</option>
-            <option value="emails">이메일 알림만</option>
-        </select>
-        
-        <label>
-            <input type="checkbox" id="pushNotif"> 푸시 알림 활성화
-        </label>
-    </div>
-</div>
-
 <script>
     const typeChart = echarts.init(document.getElementById('typeChart'));
     const dailyChart = echarts.init(document.getElementById('dailyChart'));

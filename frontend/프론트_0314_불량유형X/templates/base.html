@@ -1,16 +1,19 @@
-<!-- templates/base.html (기존 코드 그대로 유지) -->
+<!-- templates/base.html -->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}{% endblock %}</title>
+    
+    <!-- CSS 및 JavaScript 포함 -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <script src="{{ url_for('static', filename='script.js') }}"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+
     <!-- 헤더 -->
     <header class="header height-70">
         <div class="status-alert">
@@ -19,12 +22,32 @@
         </div>
         <div class="header-center">스마트 팩토리 관리 시스템</div>
         <div class="notification-panel">
-            <div class="notification-icon" onclick="toggleNotificationModal()">🔔</div>
-            <a href="#" class="logout-btn" onclick="logout()">로그아웃</a>
+            <!-- 알림 아이콘 -->
+            <div class="notification-icon" onclick="toggleNotificationDropdown()" style="cursor: pointer; position: relative;">
+                🔔 <span id="unreadAnomalyCount" class="unread-count hidden">0</span>
+            </div>
+
+            <!-- 🔔 알림 드롭다운 -->
+            <div id="notificationDropdown" class="notification-dropdown hidden">
+                <div class="dropdown-header">
+                    <h4>📢 알림 목록</h4>
+                    <button class="clear-all-btn" onclick="clearAllNotifications()">🗑️ 전체 삭제</button>
+                </div>
+                <div id="notificationItems" class="notification-items"></div>
+                <button class="close-dropdown" onclick="toggleNotificationDropdown()">닫기</button>
+            </div>
+
+            <!-- 사용자명 및 로그인/로그아웃 버튼 -->
+            <a href="{{ url_for('mypage') }}" class="username-link">김관리자</a>
+            <a href="#" class="logout-btn hidden" onclick="logout()">로그아웃</a>
+            <a href="#" id="login-btn" class="login-btn" onclick="redirectToLogin()">로그인</a>
         </div>
     </header>
 
-    <!-- 네비게이션 -->
+    <!-- 이상 감지 알림 리스트 -->
+    <div id="anomalyAlertContainer" class="anomaly-alert-container"></div>
+
+    <!-- 네비게이션 메뉴 -->
     <nav class="sidebar height-70">
         <ul class="nav-menu">
             <li class="nav-item"><a href="{{ url_for('dashboard') }}" class="color-white">대시보드</a></li>
@@ -52,89 +75,300 @@
         </ul>
     </nav>
 
-    <!-- 메인 콘텐츠 -->
+    <!-- 메인 콘텐츠 영역 -->
     <main class="main-content height-70">
         {% block content %}{% endblock %}
     </main>
 
-    <!-- 알림 UI -->
-<div class="notification-container">
-    <div class="notification-icon" onclick="toggleNotificationModal()">🔔</div>
-</div>
-
-<!-- 모달 알림 리스트 -->
-<div class="modal-overlay" id="modalOverlay" onclick="toggleNotificationModal()"></div>
-<div class="notification-modal" id="notificationModal">
-    <div class="notification-header">
-        <span>알림</span>
-        <span style="cursor: pointer;" onclick="toggleNotificationModal()">✖</span>
-    </div>
-    <div class="notification-item">📩 이메일 알림: 시스템 점검 예정</div>
-    <div class="notification-item">⚠️ 경고: 온도 센서 이상 감지</div>
-    <div class="notification-item">✅ 보고서 전송 완료</div>
-    
-    <!-- 알림 설정 UI -->
-    <div class="notification-settings">
-        <label for="notifTime">알림 시간 설정</label>
-        <select id="notifTime">
-            <option value="즉시">즉시</option>
-            <option value="1시간마다">1시간마다</option>
-            <option value="하루 한 번">하루 한 번</option>
-        </select>
-        
-        <label for="notifType">알림 유형 선택</label>
-        <select id="notifType">
-            <option value="all">모든 알림</option>
-            <option value="warnings">경고 알림만</option>
-            <option value="emails">이메일 알림만</option>
-        </select>
-        
-        <label>
-            <input type="checkbox" id="pushNotif"> 푸시 알림 활성화
-        </label>
-    </div>
-</div>
-
     <script>
-        // 로그아웃 기능
-        function logout() {
-            if (confirm('로그아웃 하시겠습니까?')) {
-                window.location.href = '{{ url_for("logout") }}';
-            }
-        }
+        let unreadCount = 0;
+let lastReadTime = Date.now();
+let unreadMessages = [];
+let unreadNotificationVisible = false;
 
-        // 서브메뉴 토글 기능
-        document.querySelectorAll('.submenu-toggle').forEach(toggle => {
-            toggle.addEventListener('click', function(e) {
-                e.preventDefault();
-                const submenu = this.parentElement.nextElementSibling;
-                submenu.classList.toggle('closed');
-                this.classList.toggle('fa-chevron-down');
-                this.classList.toggle('fa-chevron-right');
-            });
-        });
+// 읽지 않은 메시지 개수 업데이트
+function updateUnreadAnomalyCount() {
+    const countElement = document.getElementById("unreadAnomalyCount");
+    if (unreadCount > 0) {
+        countElement.textContent = unreadCount;
+        countElement.classList.remove("hidden");
+    } else {
+        countElement.classList.add("hidden");
+    }
+}
 
-        // 알림 드롭다운 토글
-        function toggleNotificationModal() {
-            const modal = document.getElementById("notificationModal");
-            const overlay = document.getElementById("modalOverlay");
-            
-            if (modal.classList.contains("active")) {
-                modal.style.opacity = "0";
-                modal.style.transform = "translate(-50%, -50%) scale(0.9)";
-                setTimeout(() => {
-                    modal.classList.remove("active");
-                    overlay.classList.remove("active");
-                }, 200);
-            } else {
-                modal.classList.add("active");
-                overlay.classList.add("active");
-                setTimeout(() => {
-                    modal.style.opacity = "1";
-                    modal.style.transform = "translate(-50%, -50%) scale(1)";
-                }, 10);
-            }
+// 알림 내역 저장 (localStorage 활용)
+function saveNotifications() {
+    localStorage.setItem("notifications", JSON.stringify(unreadMessages));
+    localStorage.setItem("unreadCount", unreadCount);
+}
+
+// 저장된 알림 불러오기
+function loadNotifications() {
+    let storedNotifications = localStorage.getItem("notifications");
+    let storedUnreadCount = localStorage.getItem("unreadCount");
+
+    if (storedNotifications) {
+        unreadMessages = JSON.parse(storedNotifications);
+        unreadCount = parseInt(storedUnreadCount) || 0;
+        updateUnreadAnomalyCount();
+        unreadMessages.forEach(message => addNotification(message));
+    }
+}
+
+// 드롭다운 열고 닫기
+function toggleNotificationDropdown() {
+    let dropdown = document.getElementById("notificationDropdown");
+    dropdown.classList.toggle("hidden");
+    dropdown.style.display = dropdown.classList.contains("hidden") ? "none" : "block";
+}
+
+// 드롭다운 외부 클릭 시 닫기
+document.addEventListener("click", function (event) {
+    let dropdown = document.getElementById("notificationDropdown");
+    let icon = document.querySelector(".notification-icon");
+
+    if (!dropdown.contains(event.target) && !icon.contains(event.target)) {
+        dropdown.classList.add("hidden");
+        dropdown.style.display = "none";
+    }
+});
+
+// 알림 추가 (드롭다운에도 추가)
+function addNotification(message) {
+    const notificationList = document.getElementById("notificationItems");
+    const notificationItem = document.createElement("div");
+
+    let now = new Date();
+    let timeString = now.toLocaleTimeString("ko-KR");
+    let dateString = now.toISOString().split("T")[0];
+
+    notificationItem.classList.add("notification-item");
+    notificationItem.innerHTML = `
+        <span class="notification-text">${dateString} ${timeString} - ${message}</span>
+        <button class="delete-btn" onclick="removeNotification(this)">❌</button>
+    `;
+
+    notificationList.prepend(notificationItem);
+    updateUnreadAnomalyCount();
+    saveNotifications();
+}
+
+// 개별 알림 삭제
+function removeNotification(button) {
+    let notificationText = button.parentElement.textContent;
+    unreadMessages = unreadMessages.filter(msg => !notificationText.includes(msg));
+    button.parentElement.remove();
+    unreadCount = unreadMessages.length;
+    updateUnreadAnomalyCount();
+    saveNotifications();
+}
+
+// 전체 알림 삭제
+function clearAllNotifications() {
+    document.getElementById("notificationItems").innerHTML = "";
+    unreadMessages = [];
+    unreadCount = 0;
+    updateUnreadAnomalyCount();
+    saveNotifications();
+}
+
+// 이상 알림(화면) 추가
+function addAnomalyAlert(message) {
+    const container = document.getElementById("anomalyAlertContainer");
+
+    container.innerHTML = "";
+    const alertElement = document.createElement("div");
+    alertElement.classList.add("anomaly-alert");
+    alertElement.innerHTML = `
+        <span>${message}</span>
+        <button class="confirm-btn" onclick="markAnomalyAsRead(this, '${message}')">확인</button>
+    `;
+
+    container.appendChild(alertElement);
+    unreadMessages.push(message);
+    unreadCount++;
+    updateUnreadAnomalyCount();
+
+    addNotification(message);
+    saveNotifications();
+
+    setTimeout(() => {
+        if (alertElement.parentElement) {
+            alertElement.remove();
+            checkUnreadMessages();
         }
+    }, 10000);
+}
+
+// 이상 알림 확인 (읽음 처리)
+function markAnomalyAsRead(button, message) {
+    button.parentElement.remove();
+    lastReadTime = Date.now();
+    unreadNotificationVisible = false;
+
+    unreadMessages = unreadMessages.filter(msg => msg !== message);
+    unreadCount = unreadMessages.length;
+    updateUnreadAnomalyCount();
+    saveNotifications();
+
+    // 드롭다운에서도 해당 메시지를 찾아서 회색 표시
+    document.querySelectorAll(".notification-item").forEach(item => {
+        if (item.innerText.includes(message)) {
+            item.classList.add("read-notification");
+        }
+    });
+
+    checkUnreadMessages();
+}
+
+// 1분 동안 확인하지 않으면 "안 읽은 메시지 N건" 알림 표시
+function checkUnreadMessages() {
+    setTimeout(() => {
+        let elapsedTime = Date.now() - lastReadTime;
+        if (elapsedTime >= 60000 && unreadMessages.length > 0) {
+            showUnreadMessageNotification();
+        }
+    }, 60000);
+}
+
+// "안 읽은 메시지 N건" 표시
+function showUnreadMessageNotification() {
+    const container = document.getElementById("anomalyAlertContainer");
+
+    if (unreadNotificationVisible) {
+        document.querySelector(".unread-message-notification span").textContent = 
+            `⚠ 안 읽은 메시지 ${unreadCount}건이 있습니다.`;
+        return;
+    }
+
+    container.innerHTML = `
+        <div class="anomaly-alert unread-message-notification">
+            <span>⚠ 안 읽은 메시지 ${unreadCount}건이 있습니다.</span>
+        </div>
+    `;
+    unreadNotificationVisible = true;
+}
+
+// 페이지 로드 시 알림 복원
+document.addEventListener("DOMContentLoaded", loadNotifications);
+
+// 5초마다 랜덤 메시지 생성
+setInterval(() => {
+    let lines = ["A", "B", "C", "D"]; // 라인 종류
+    let issues = ["불량 발생", "이상 동작 감지", "온도 이상 감지", "기계 오작동 감지", "압력 이상 감지"]; // 문제 유형
+
+    let randomLine = lines[Math.floor(Math.random() * lines.length)];
+    let randomIssue = issues[Math.floor(Math.random() * issues.length)];
+
+    let randomMessage = `⚠ 라인 ${randomLine}에서 ${randomIssue}!`;
+    addAnomalyAlert(randomMessage);
+}, 5000);
+
+// 1분 동안 확인하지 않으면 "안 읽은 메시지 N건" 메시지 표시 (10초마다 체크)
+setInterval(() => {
+    let elapsedTime = Date.now() - lastReadTime;
+    if (elapsedTime >= 60000 && unreadMessages.length > 0) {
+        showUnreadMessageNotification();
+    }
+}, 10000);
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'920202fc4e42b0e2',t:'MTc0MTkzNjg1OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+    
+    
+    
+    <style>
+        .notification-dropdown {
+            position: absolute;
+            top: 60px;
+            right: 20px;
+            width: 300px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            display: none;
+        }
+    
+        .notification-dropdown.hidden {
+            display: none;
+        }
+    
+        .notification-items {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    
+        .notification-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #ffffff;
+            color: black;
+            padding: 8px;
+            border-radius: 4px;
+            margin-bottom: 5px;
+            border: 1px solid #ddd;
+        }
+    
+        .read-notification {
+            background: #ddd !important;
+            color: #555 !important;
+        }
+    
+        .delete-btn {
+            background: none;
+            border: none;
+            color: red;
+            cursor: pointer;
+        }
+    
+        .clear-all-btn {
+            background: none;
+            border: none;
+            color: red;
+            cursor: pointer;
+            font-weight: bold;
+        }
+    
+        .close-dropdown {
+            width: 100%;
+            margin-top: 5px;
+            background: #f1f1f1;
+            border: none;
+            padding: 5px;
+            cursor: pointer;
+        }
+    
+        .unread-count {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: red;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 50%;
+            font-size: 12px;
+        }
+    
+        .unread-count.hidden {
+            display: none;
+        }
+    
+        .anomaly-alert {
+            background: red;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            position: fixed;
+            top: 20px;
+            right: 20px;
+        }
+    
+        .unread-message-notification {
+            background: orange;
+        }
+    </style>
+
+</body>
 </html>
