@@ -285,6 +285,9 @@ def member_manage():
 
     return render_template(
         'member/member_manage.html', 
+        per_page = per_page,
+
+        
         admins=paginated_admins,
         admin_current_page=admin_page,
         total_admins=total_admins,
@@ -404,9 +407,9 @@ def search_members():
         if results is not None and len(results) > 0:
             return jsonify({'success': True, 'members': results})
         elif results is not None and len(results) == 0:
-            return jsonify({'success': False, 'message': '검색 결과가 없습니다.'})
+            return jsonify({'success': False})
         else:
-            return jsonify({'success': False, 'message': '데이터베이스 오류가 발생했습니다.'})
+            return jsonify({'success': False})
 
     except Exception as e:
         print(f"검색 중 오류 발생: {str(e)}")  # 디버깅용 로그

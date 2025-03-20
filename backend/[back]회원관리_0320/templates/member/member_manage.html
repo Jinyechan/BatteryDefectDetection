@@ -49,7 +49,8 @@
                         tableBody.innerHTML += row;
                     });
                 } else {
-                    alert(data.message || '검색 실패');
+                    const row = `<td colspan = "8" class="text-center px-6 py-4 whitespace-nowrap text-sm text-gray-900"> 등록된 회원이 없습니다.</td>`
+                    tableBody.innerHTML += row;
                 }
             })
             .catch(error => {
@@ -299,7 +300,7 @@
                     </div>
                     <div class="overflow-x-auto">
                         {% set admin_total_count = total_admins %} <!-- 전체 행 개수 -->
-                        {% set admin_items_per_page = 2 %} <!-- 페이지당 아이템 수를 2로 설정 -->
+                        {% set admin_items_per_page = per_page %} <!-- 페이지당 아이템 수를 2로 설정 -->
                         {% set admin_start_idx = (admin_current_page - 1) * admin_items_per_page %}
                         {% set admin_end_idx = admin_start_idx + admin_items_per_page %} <!-- admin_end_item 계산 추가 -->
 
@@ -327,6 +328,7 @@
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
+                                {% if admins %}
                                 {% for admin in admins %}
                                 <tr>
                                     <td class="text-center px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -351,6 +353,9 @@
                                     </td>
                                 </tr>
                                 {% endfor %}
+                                {% else %}
+                                <td colspan = "6" class="text-center px-6 py-4 whitespace-nowrap text-sm text-gray-900"> 등록된 관리자 회원이 없습니다.</td>
+                                {% endif %}
                             </tbody>
                         </table>
                     </div>
@@ -378,6 +383,7 @@
                                 </span>건
                                 표시
                             </p>
+                            {% if total_admins %}
                             <div>
                                 <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
                                     aria-label="Pagination">
@@ -404,9 +410,9 @@
                                         <span class="sr-only">다음</span>
                                         <i class="fas fa-chevron-right"></i>
                                     </button>
-
                                 </nav>
                             </div>
+                            {% endif %}
                         </div>
                     </div>
                     </section>
@@ -513,36 +519,22 @@
                                     {% endfor %}
                                     {% else %}
                                     <tr>
-                                        <td colspan="8" style="text-align: center;">승인 대기 회원이 없습니다.</td>
+                                        <td colspan="8" class="text-center px-6 py-4 whitespace-nowrap text-sm text-gray-900">승인 대기중인 회원이 없습니다.</td>
                                     </tr>
                                     {% endif %}
                                 </tbody>
                             </table>
                         </div>
                         <!-- 페이지네이션 -->
-                        <div class="flex items-center justify-between mt-4">
-                            <div class="flex-1 flex justify-between sm:hidden">
-                                <button
-                                    class="!rounded-button relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-                                    {% if pending_current_page==1 %} disabled {% endif %}
-                                    onclick="changePage({{ pending_current_page - 1 }}, 'pending')">
-                                    이전
-                                </button>
-                                <button
-                                    class="!rounded-button ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-                                    {% if pending_current_page==total_pending_pages %} disabled {% endif %}
-                                    onclick="changePage({{ pending_current_page + 1 }}, 'pending')">
-                                    다음
-                                </button>
-                            </div>
                             <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                                 <div>
                                     <p class="text-sm text-gray-700">
                                         총 <span class="font-medium">{{ total_pending }}</span> 건 중
-                                        <span class="font-medium">{{ pending_end_idx }}</span>
+                                        <span class="font-medium">{{ pending_end_idx }} 건 표시</span>
 
                                     </p>
                                 </div>
+                                {% if pending_members %}
                                 <div>
                                     <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
                                         aria-label="Pagination">
@@ -569,6 +561,7 @@
                                         </button>
                                     </nav>
                                 </div>
+                                {% endif %}
                             </div>
                 </section>
 
@@ -651,7 +644,7 @@
                     </div>
                     <div class="overflow-x-auto">
                         {% set member_total_count = total_members %}
-                        {% set member_items_per_page = 2 %}
+                        {% set member_items_per_page = per_page %}
                         {% set member_current_page = member_current_page %}
                         {% set member_total_pages = member_total_pages %}
                         {% set member_start_idx = member_start_idx %}
@@ -682,6 +675,7 @@
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200" id = "memberTableBody">
+                                {% if all_members %}
                                 {% for member in all_members %}
                                 <tr>
                                     <td class="text-center px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{
@@ -732,28 +726,20 @@
                                     </td>
                                 </tr>
                                 {% endfor %}
+                                {% else %}
+                                <td colspan = "9" class="text-center px-6 py-4 whitespace-nowrap text-sm text-gray-900"> 등록된 회원이 없습니다.</td>
+                                {% endif %}
+
                             </tbody>
                         </table>
                     </div>
                     <div class="flex items-center justify-between mt-4">
-                        <div class="flex-1 flex justify-between sm:hidden">
-                            <button
-                                class="!rounded-button relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-                                onclick="changePage({{ member_current_page - 1 }}, 'member')" {% if
-                                member_current_page==1 %} disabled {% endif %}>
-                                이전
-                            </button>
-                            <button
-                                class="!rounded-button ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-                                onclick="changePage({{ member_current_page + 1 }}, 'member')">
-                                다음
-                            </button>
-                        </div>
                         <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                             <p class="text-sm text-gray-700">
                                 총 <span class="font-medium">{{ member_total_count }}</span> 건 중
                                 <span class="font-medium">{{all_members | length}} </span> 건 표시
                             </p>
+                            {% if all_members %}
                             <div>
                                 <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
                                     aria-label="Pagination">
@@ -781,6 +767,7 @@
                                     </button>
                                 </nav>
                             </div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
