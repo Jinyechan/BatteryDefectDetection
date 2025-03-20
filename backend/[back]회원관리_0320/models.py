@@ -12,10 +12,10 @@ class DBManager:
     def connect(self):
         try:
             self.connection = mysql.connector.connect(
-                host="10.0.66.31",
-                user="sejong",
+                host="43.200.82.186",
+                user="badpotato",
                 password="1234",
-                database="project"
+                database="defect_detection"
             )
             self.cursor = self.connection.cursor(dictionary=True)
         except mysql.connector.Error as error:
