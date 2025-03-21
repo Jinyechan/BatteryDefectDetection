@@ -1,0 +1,162 @@
+/* ============================== */
+/* 폼 스타일 */
+/* ============================== */
+
+.form-container {
+    max-width: 600px;
+    margin: 0 auto;
+    background: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 폼 그룹 */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-label {
+    display: block;
+    font-size: 14px;
+    margin-bottom: 6px;
+    color: #555;
+    font-weight: 600;
+}
+
+.form-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: #fff;
+    font-size: 14px;
+    transition: border-color 0.3s ease-in-out;
+}
+
+.form-input:focus {
+    border-color: #3498db;
+    outline: none;
+    box-shadow: 0 0 5px rgba(52, 152, 219, 0.2);
+}
+
+/* ============================== */
+/* 이메일 입력 가로 정렬 */
+/* ============================== */
+
+.email-group {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.email-group input {
+    flex: 1;
+}
+
+.email-group select {
+    flex: 0.8;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+/* ============================== */
+/* 전화번호 입력 가로 정렬 */
+/* ============================== */
+
+.phone-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.phone-group input {
+    text-align: center;
+    flex: 1;
+}
+
+/* ============================== */
+/* 알림 설정 스타일 */
+/* ============================== */
+
+.notification-settings {
+    margin-top: 30px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 6px;
+}
+
+.setting-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.small-select {
+    padding: 8px;
+    width: 140px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+/* ============================== */
+/* 버튼 그룹 */
+/* ============================== */
+
+.button-group {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 30px;
+}
+
+.btn {
+    padding: 10px 25px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s ease-in-out;
+}
+
+.btn-cancel {
+    background: #f8f9fa;
+    border: 1px solid #ddd;
+    color: #333;
+}
+
+.btn-cancel:hover {
+    background: #e9ecef;
+}
+
+.btn-save {
+    background: #2c3e50;
+    color: white;
+    border: none;
+}
+
+.btn-save:hover {
+    background: #1a252f;
+}
+
+/* ============================== */
+/* 반응형 디자인 */
+/* ============================== */
+
+@media (max-width: 600px) {
+    .button-group {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .btn {
+        width: 100%;
+    }
+    .email-group {
+        flex-direction: column;
+    }
+    .phone-group {
+        flex-direction: column;
+    }
+}

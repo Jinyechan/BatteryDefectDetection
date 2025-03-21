@@ -2,6 +2,9 @@
 
 {% block title %}실시간 모니터링{% endblock %}
 
+<link rel="stylesheet" href="{{ url_for('static', filename='css/monitoring.css') }}">
+<script src="{{ url_for('static', filename='js/monitoring.js') }}" defer></script>
+
 {% block content %}
 <style>
     /* 기본 설정 */
