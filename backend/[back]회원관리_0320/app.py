@@ -144,6 +144,7 @@ def find_password():
     
     return render_template('lost_password.html')
 
+# 비밀번호 재설정 
 @app.route('/reset_password', methods=['GET', 'POST'])
 def reset_password():
     userid = request.args.get('userid')  # 🔹 URL에서 userid 가져오기
@@ -176,7 +177,7 @@ def reset_password():
 
 # 마이페이지 - 회원정보 가져오기
 @app.route('/mypage', methods=['GET'])
-def view_mypage():
+def mypage():
     if 'userid' not in session:
         flash("로그인 후 접근해 주세요.")
         return redirect(url_for('login'))
@@ -254,7 +255,7 @@ def withdraw():
 # 회원 관리 페이지
 @app.route('/member_manage')
 def member_manage():
-    per_page = 3  # 한 페이지당 항목 수
+    per_page = 5  # 한 페이지당 항목 수
 
     # 관리자 페이지네이션
     admin_page = request.args.get('admin_page', 1, type=int)
@@ -366,7 +367,7 @@ def refuse_member():
     else:
         return jsonify({'success': False}), 400
 
-# 회원정보 수정
+# 회원관리 - 회원정보 수정
 @app.route('/edit_member/<userid>', methods=['GET'])
 def edit_member(userid):
     if 'userid' not in session:
@@ -380,7 +381,7 @@ def edit_member(userid):
 
     return render_template('member/mypage.html', mydata=member_data)
 
-# 회원 탈퇴 
+# 회원관리 - 회원 탈퇴 
 @app.route('/delete_member', methods=['POST'])
 def delete_member():
     data = request.json
@@ -393,6 +394,7 @@ def delete_member():
     else:
         return jsonify({'success': False, 'message': "회원 삭제 실패"})
 
+# 회원관리 - 회원 검색
 @app.route('/search_members', methods=['POST'])
 def search_members():
     data = request.json
@@ -414,6 +416,58 @@ def search_members():
     except Exception as e:
         print(f"검색 중 오류 발생: {str(e)}")  # 디버깅용 로그
         return jsonify({'success': False, 'message': f'검색 중 오류: {str(e)}'})
+
+
+# 시스템 관리
+@app.route('/system-management')
+def system_management():
+
+    if 'userid' not in session:
+        flash("로그인 후 접근해 주세요.")
+        return redirect(url_for('login'))
+
+    user_id = session['userid']
+    user_info = manager.get_user_info(user_id)  # 사용자 정보 가져오기
+    
+    
+    return render_template('system-management.html', user_info=user_info)
+
+@app.route('/apply_management', methods=['POST'])
+def apply_management():
+    # POST 요청 데이터 가져오기
+    categoryIdx = request.form.get('categoryIdx')
+    userid = request.form.get('userid')
+    email = request.form.get('email')
+    emailDomain = request.form.get('emailDomain')
+    applyTitle = request.form.get('applyTitle')
+    applyContent = request.form.get('applyContent')
+    applyFileName = request.form.get('applyFileName')
+
+    # 모든 필드의 값 검증
+    if not categoryIdx or not userid or not email or not emailDomain or not applyTitle or not applyContent:
+        return render_template('system-management.html', alert_message="모든 필드를 입력해 주세요.")
+
+    userEmail = f"{email}@{emailDomain}"
+
+    # 데이터베이스 삽입 로직
+    success = manager.insert_apply(categoryIdx, userid, userEmail, applyTitle, applyContent, applyFileName)
+
+    if 'userid' not in session:
+        flash("로그인 후 접근해 주세요.")
+        return redirect(url_for('login'))
+
+    user_id = session['userid']
+    user_info = manager.get_user_info(user_id) 
+
+
+    if success:
+        return render_template('system-management.html', alert_message="요청사항이 성공적으로 등록되었습니다.", user_info = user_info)
+    else:
+        return render_template('system-management.html', alert_message="요청사항 등록에 실패하였습니다.", user_info = user_info)
+
+
+
+# 파일 업로드처리, 점검 신청 내역 조회, 점검 요청 상태 컬럼 추가
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=8080, debug=True)

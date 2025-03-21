@@ -103,10 +103,10 @@ class DBManager:
             self.disconnect()
 
     def get_user_info(self, userid):
-        """ 데이터베이스에서 특정 userid의 사용자 정보를 가져오기 (userid와 username) """
+        """ 데이터베이스에서 특정 userid의 사용자 정보를 가져오기"""
         try:
             self.connect()
-            sql = "SELECT userid, username, userLevel, refusal, removed FROM users WHERE userid = %s"
+            sql = "SELECT * FROM users WHERE userid = %s"
             self.cursor.execute(sql, (userid,))
             result = self.cursor.fetchone()
             return result if result else None
@@ -444,6 +444,23 @@ class DBManager:
             print(f"DB 오류 발생: {str(error)}")
             return None
 
+        finally:
+            self.disconnect()
+
+    def insert_apply(self, categoryIdx, userid, userEmail, applyTitle, applyContent, applyFileName):
+        try:
+            self.connect()
+            sql = "INSERT INTO apply (categoryIdx, userid, userEmail, applyTitle, applyContent, applyFileName, created_at) VALUES (%s, %s, %s, %s, %s, %s, NOW())"
+            
+            # applyFileName이 None인 경우 NULL로 설정
+            if applyFileName is None or applyFileName == "":
+                applyFileName = None
+
+            self.cursor.execute(sql, (categoryIdx, userid, userEmail, applyTitle, applyContent, applyFileName))
+            self.connection.commit()
+            return True, None
+        except mysql.connector.Error as error:
+            return False, str(error)
         finally:
             self.disconnect()
 
