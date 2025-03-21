@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <title>홈페이지</title>
+</head>
+<body>
+    <p>홈페이지</p>
+    {% if session.get('username') %}
+        <p>안녕하세요, {{ session.get('username') }}님!</p>
+        <a href="/logout">로그아웃</a>
+    {% else %}
+        <p>로그인 해주세요.</p>
+        <a href="/login">로그인</a>
+    {% endif %}
+</body>
+</html>

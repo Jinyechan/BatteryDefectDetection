@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 계정 관리</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://ai-public.creatie.ai/gen_page/tailwind-custom.css" rel="stylesheet">
+    <script
+        src="https://cdn.tailwindcss.com/3.4.5?plugins=forms@0.5.7,typography@0.5.13,aspect-ratio@0.4.2,container-queries@0.1.1"></script>
+    <script src="https://ai-public.creatie.ai/gen_page/tailwind-config.min.js" data-color="#4F46E5"
+        data-border-radius='small'></script>
+    <script>
+        function searchMembers() {
+            const userid = document.getElementById('searchId').value;
+            const username = document.getElementById('searchName').value;
+            const emp_no = document.getElementById('searchEmpNo').value;
+        
+            fetch('/search_members', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({userid, username, emp_no})
+            })
+            .then(response => response.json())
+            .then(data => {
+                const tableBody = document.getElementById('memberTableBody');
+                
+                // 테이블 초기화
+                tableBody.innerHTML = '';
+        
+                if (data.success) {
+                    console.log("검색 성공:", data.members); // 디버깅용 로그
+        
+                    data.members.forEach((member, index) => {
+                        const row = `
+                            <tr>
+                                <td class="text-center px-6 py-4 whitespace-nowrap text-sm text-gray-900"> ${index + 1}</td>
+                                <td class="text-center px-6 py-4 whitespace-nowrap text-sm text-gray-900"> ${member.userid}</td>
+                                <td class="text-center px-6 py-4 whitespace-nowrap text-sm text-gray-900"> ${member.emp_no}</td>
+                                <td class="text-center px-6 py-4 whitespace-nowrap text-sm text-gray-900"> ${member.username}</td>
+                                <td class="text-center px-6 py-4 whitespace-nowrap text-sm text-gray-900"> ${member.userEmail}</td>
+                                <td class="text-center px-6 py-4 whitespace-nowrap text-sm text-gray-900"> ${getUserLevelLabel(member.userLevel)}</td>
+                                <td class="text-center px-6 py-4 whitespace-nowrap text-sm text-gray-900"> ${new Date(member.created_at).toLocaleString()}</td>
+                                <td class="text-center px-6 py-4 whitespace-nowrap text-sm text-gray-900"> ${member.userLevel === 0 ? '미승인' : '승인'}</td>
+                                <td class="text-center px-6 py-4 whitespace-nowrap text-sm text-gray-900"> <!-- 관리 버튼 추가 --></td>
+                            </tr>`;
+                        tableBody.innerHTML += row;
+                    });
+                } else {
+                    const row = `<td colspan = "8" class="text-center px-6 py-4 whitespace-nowrap text-sm text-gray-900"> 등록된 회원이 없습니다.</td>`
+                    tableBody.innerHTML += row;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert(`오류가 발생했습니다: ${error.message}`);
+            });
+        }
+        
+        // 회원 레벨 텍스트 반환 함수
+        function getUserLevelLabel(userLevel) {
+            switch (userLevel) {
+                case 0: return '미승인 회원';
+                case 1: return '일반회원';
+                case 100: return '관리자';
+                case 1000: return '최고 관리자';
+                default: return '알 수 없음';
+            }
+        }
+        
+        
+        
+        
+
+
+        function deleteMember(userid) {
+            if (confirm(`${userid} 회원을 탈퇴처리 하시겠습니까?`)) {
+                fetch('/delete_member', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userid: userid })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert(data.message);
+                            location.reload(); // 페이지 새로고침
+                        } else {
+                            alert(data.message || '회원 삭제 실패');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('오류가 발생했습니다.');
+                    });
+            }
+        }
+
+        // 승인 처리 함수
+        function approveMember(userid, username) {
+            if (confirm(`${username} 회원을 승인하시겠습니까?`)) {
+                fetch('/approve_member', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userid: userid })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert(`${username} 회원이 승인되었습니다.`);
+                            location.reload(); // 페이지 새로고침
+                        } else {
+                            alert('회원 승인 실패');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('오류가 발생했습니다.');
+                    });
+            }
+        }
+
+        // 거절 처리 함수
+        function refuseMember(userid, username) {
+            if (confirm(`${username} 회원을 거절하시겠습니까?`)) {
+                fetch('/refuse_member', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userid: userid })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert(`${username} 회원이 거절되었습니다.`);
+                            location.reload(); // 페이지 새로고침
+                        } else {
+                            alert('회원 거절 실패');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('오류가 발생했습니다.');
+                    });
+            }
+        }
+        function confirmChange(username, userid) {
+            const confirmation = confirm(`${username} 회원을 일반회원으로 전환하시겠습니까?`);
+            if (confirmation) {
+                // AJAX 요청 또는 폼 전송을 통해 서버로 전송
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = "{{ url_for('update_user_level') }}";  // 적절한 URL로 설정
+
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'userid';
+                input.value = userid;
+                form.appendChild(input);
+
+                document.body.appendChild(form);
+                form.submit();  // 폼 제출
+            }
+        }
+
+        function openModal() {
+            document.getElementById('confirmModal').classList.remove('hidden');
+            loadMembers(); // 모달이 열릴 때 회원 데이터 로드
+        }
+
+        function closeModal() {
+            document.getElementById('confirmModal').classList.add('hidden');
+        }
+
+        function loadMembers() {
+            // 여기에 회원 데이터를 동적으로 로드하는 로직을 추가할 수 있습니다.
+            // 예: AJAX 요청을 통해 서버에서 회원 데이터를 가져와 테이블에 추가
+            const members = [
+                { id: 'admin', emp_no: '122525', name: '최고관리자', email: 'admin@example.com', level: '최고관리자', lastLogin: '2024-02-20 14:30', },
+                // 추가 회원 데이터
+            ];
+
+            const tbody = document.getElementById('memberTableBody');
+            tbody.innerHTML = ''; // 기존 데이터 초기화
+
+            members.forEach(member => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${member.id}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${member.emp_no}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${member.name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${member.email}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${member.level}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${member.lastLogin}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                            활성
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button class="text-custom hover:text-indigo-900 mr-3">추가</button>
+                       
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+    </script>
+    <style>
+        /* 테이블 스타일 */
+        table {
+            width: 100%;
+            /* 테이블이 화면 크기에 맞게 조정 */
+            table-layout: auto;
+            /* 열 너비를 내용에 따라 자동 조정 */
+            border-collapse: collapse;
+            /* 테두리 간격 제거 */
+        }
+
+        th,
+        td {
+            padding: 10px;
+            /* 셀 안쪽 여백 */
+            text-align: center;
+            /* 텍스트 중앙 정렬 */
+            word-wrap: break-word;
+            /* 긴 텍스트 줄바꿈 */
+        }
+
+        th {
+            white-space: nowrap;
+            /* 텍스트 줄바꿈 방지 */
+            overflow: hidden;
+            /* 넘치는 텍스트 숨김 */
+            text-overflow: ellipsis;
+            /* 넘치는 텍스트에 '...' 표시 */
+        }
+
+        td {
+            white-space: normal;
+            text-align: left;
+            /* td는 줄바꿈 허용 */
+        }
+
+        @media screen and (max-width: 768px) {
+            table {
+                font-size: 12px;
+                /* 작은 화면에서 글씨 크기 축소 */
+            }
+
+            th,
+            td {
+                padding: 5px;
+                /* 작은 화면에서 여백 축소 */
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 font-['Noto_Sans_KR']">
+    <nav class="bg-white shadow">
+        <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex">
+                    <div class="flex-shrink-0 flex items-center">
+                        <img class="h-8 w-auto" src="https://ai-public.creatie.ai/gen_page/logo_placeholder.png"
+                            alt="Logo">
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <span class="text-gray-700 mr-4">최고관리자 (admin@example.com)</span>
+                        <button
+                            class="!rounded-button bg-custom text-white px-4 py-2 text-sm font-medium hover:bg-indigo-700">
+                            로그아웃
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-8xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div class="px-4 py-6 sm:px-0">
+            <div class="mb-8">
+                <h1 class="text-2xl font-bold text-gray-900">관리자 계정 관리</h1>
+            </div>
+
+            <div class="bg-white shadow rounded-lg mb-8">
+                <section id="admin-section"></section>
+                <div class="p-6">
+                    <div class="flex justify-between mb-4">
+                        <h2 class="text-lg font-medium text-gray-900">관리자</h2>
+                        <!-- <button
+                            class="!rounded-button bg-custom text-white px-4 py-2 text-sm font-medium hover:bg-indigo-700"
+                            onclick="openModal()">
+                            <i class="fas fa-plus mr-2"></i>계정 추가
+                        </button> -->
+                    </div>
+                    <div class="overflow-x-auto">
+                        {% set admin_total_count = total_admins %} <!-- 전체 행 개수 -->
+                        {% set admin_items_per_page = per_page %} <!-- 페이지당 아이템 수를 2로 설정 -->
+                        {% set admin_start_idx = (admin_current_page - 1) * admin_items_per_page %}
+                        {% set admin_end_idx = admin_start_idx + admin_items_per_page %} <!-- admin_end_item 계산 추가 -->
+
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th
+                                        class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        No.</th>
+                                    <th
+                                        class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        ID</th>
+                                    <th
+                                        class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        회원명</th>
+                                    <th
+                                        class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        이메일</th>
+                                    <th
+                                        class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        권한레벨</th>
+                                    <th
+                                        class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        관리</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                {% if admins %}
+                                {% for admin in admins %}
+                                <tr>
+                                    <td class="text-center px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        {{ total_admins - (admin_start_idx + loop.index - 1) }}
+                                    </td>
+                                    <td class="text-center px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{
+                                        admin.userid }}</td>
+                                    <td class="text-center px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{
+                                        admin.username }}</td>
+                                    <td class="text-center px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{
+                                        admin.userEmail }}</td>
+                                    <td class="text-center px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        {% if admin.userLevel == 100 %}
+                                        관리자
+                                        {% elif admin.userLevel == 1000 %}
+                                        최고 관리자
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <button onclick="confirmChange('{{ admin.username }}', '{{ admin.userid }}')"
+                                            class="text-red-600 hover:text-red-900">제외</button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                {% else %}
+                                <td colspan = "6" class="text-center px-6 py-4 whitespace-nowrap text-sm text-gray-900"> 등록된 관리자 회원이 없습니다.</td>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- 페이지네이션 -->
+                    <div class="flex items-center justify-between mt-4">
+                        <div class="flex-1 flex justify-between sm:hidden">
+                            <button
+                                class="!rounded-button relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                                {% if admin_current_page==1 %} disabled {% endif %}
+                                onclick="changePage({{ admin_current_page - 1 }})">
+                                이전
+                            </button>
+                            <button
+                                class="!rounded-button ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                                {% if admin_current_page==admin_total_pages %} disabled {% endif %}
+                                onclick="changePage({{ admin_current_page + 1 }})">
+                                다음
+                            </button>
+                        </div>
+                        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                            <p class="text-sm text-gray-700">
+                                총 <span class="font-medium">{{ total_admins }}</span> 건 중
+                                <span class="font-medium">
+                                    {{ admins | length }}
+                                </span>건
+                                표시
+                            </p>
+                            {% if total_admins %}
+                            <div>
+                                <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
+                                    aria-label="Pagination">
+                                    <button
+                                        class="!rounded-button relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                                        {% if admin_current_page==1 %} disabled {% endif %}
+                                        onclick="changeAdminPage({{ admin_current_page - 1 }})">
+                                        <span class="sr-only">이전</span>
+                                        <i class="fas fa-chevron-left"></i>
+                                    </button>
+
+                                    {% for page in range(1, admin_total_pages + 1) %}
+                                    <button
+                                        class="!rounded-button relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium {% if page == admin_current_page %} text-indigo-600 bg-indigo-100 {% else %} text-gray-700 hover:bg-gray-50 {% endif %}"
+                                        onclick="changeAdminPage({{ page }})">
+                                        {{ page }}
+                                    </button>
+                                    {% endfor %}
+
+                                    <button
+                                        class="!rounded-button relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                                        {% if admin_current_page==admin_total_pages %} disabled {% endif %}
+                                        onclick="changeAdminPage({{ admin_current_page + 1 }})">
+                                        <span class="sr-only">다음</span>
+                                        <i class="fas fa-chevron-right"></i>
+                                    </button>
+                                </nav>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    </section>
+
+                    <script>
+                        // 관리자 페이지네이션 변경
+                        function changeAdminPage(page) {
+                            const urlParams = new URLSearchParams(window.location.search);
+                            urlParams.set('admin_page', page);  // 관리자 페이지만 변경
+                            window.location.search = urlParams.toString();
+                        }
+
+                        // 승인 대기 회원 페이지네이션 변경
+                        function changePendingPage(page) {
+                            const urlParams = new URLSearchParams(window.location.search);
+                            urlParams.set('pending_page', page);  // 승인 대기 회원 페이지만 변경
+                            window.location.search = urlParams.toString();
+                        }
+
+                        // 전체 회원 페이지네이션 변경
+                        function changeMemberPage(page) {
+                            const urlParams = new URLSearchParams(window.location.search);
+                            urlParams.set('member_page', page);  // 전체 회원 페이지만 변경
+                            window.location.search = urlParams.toString();
+                        }
+                    </script>
+
+                </div>
+            </div>
+
+            <div class="bg-white shadow rounded-lg mb-8">
+                <section id="pending-section">
+                    <div class="p-6">
+                        <h2 class="text-lg font-medium text-gray-900 mb-6">승인 대기 회원 목록</h2>
+
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200" id="members-table">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th
+                                            class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            No.</th>
+                                        <th
+                                            class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            ID</th>
+                                        <th
+                                            class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            사번</th>
+                                        <th
+                                            class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            회원명</th>
+                                        <th
+                                            class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            이메일</th>
+                                        <th
+                                            class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            가입 날짜</th>
+                                        <th
+                                            class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            상태</th>
+                                        <th
+                                            class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            관리</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    {% if pending_members%}
+                                    {% for member in pending_members %}
+                                    <tr>
+                                        <td class="text-center px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{
+                                            total_pending - (pending_start_idx + loop.index - 1) }}</td>
+                                        <td class="text-center px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{
+                                            member.userid }}</td>
+                                        <td class="text-center px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{
+                                            member.emp_no }}</td>
+                                        <td class="text-center px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{
+                                            member.username }}</td>
+                                        <td class="text-center px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{
+                                            member.userEmail }}</td>
+                                        <td class="text-center px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            2024-02-20
+                                            14:30</td>
+                                        <td class="text-center px-6 py-4 whitespace-nowrap">
+                                            <span
+                                                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-black-800">미승인</span>
+                                        </td>
+                                        <td class="text-center px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <!-- 승인 버튼 -->
+                                            <button
+                                                onclick="approveMember('{{ member.userid }}', '{{ member.username }}')"
+                                                class="text-custom hover:text-indigo-900 mr-3">
+                                                승인
+                                            </button>
+
+                                            <!-- 거절 버튼 -->
+                                            <button
+                                                onclick="refuseMember('{{ member.userid }}', '{{ member.username }}')"
+                                                class="text-red-600 hover:text-red-900">
+                                                거절
+                                            </button>
+
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="8" class="text-center px-6 py-4 whitespace-nowrap text-sm text-gray-900">승인 대기중인 회원이 없습니다.</td>
+                                    </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- 페이지네이션 -->
+                            <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-700">
+                                        총 <span class="font-medium">{{ total_pending }}</span> 건 중
+                                        <span class="font-medium">{{ pending_end_idx }} 건 표시</span>
+
+                                    </p>
+                                </div>
+                                {% if pending_members %}
+                                <div>
+                                    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
+                                        aria-label="Pagination">
+                                        <button
+                                            class="!rounded-button relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                                            {% if pending_current_page==1 %} disabled {% endif %}
+                                            onclick="changePendingPage({{ pending_current_page - 1 }})">
+                                            <span class="sr-only">이전</span>
+                                            <i class="fas fa-chevron-left"></i>
+                                        </button>
+                                        {% for page in range(1, pending_total_pages + 1) %}
+                                        <button
+                                            class="!rounded-button relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium {% if page == pending_current_page %} text-indigo-600 bg-indigo-100 {% else %} text-gray-700 hover:bg-gray-50 {% endif %}"
+                                            onclick="changePendingPage({{ page }})">
+                                            {{ page }}
+                                        </button>
+                                        {% endfor %}
+                                        <button
+                                            class="!rounded-button relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                                            {% if pending_current_page==pending_total_pages %} disabled {% endif %}
+                                            onclick="changePendingPage({{ pending_current_page + 1 }})">
+                                            <span class="sr-only">다음</span>
+                                            <i class="fas fa-chevron-right"></i>
+                                        </button>
+                                    </nav>
+                                </div>
+                                {% endif %}
+                            </div>
+                </section>
+
+
+            </div>
+
+            <script>
+                document.addEventListener("DOMContentLoaded", function () {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const sectionType = urlParams.get('section'); // URL에 'section' 값이 있으면 가져옴
+                    if (sectionType) {
+                        showSection(sectionType);
+                    }
+                });
+
+                // ✅ 페이지 변경 함수 (AJAX로 새로고침 없이 데이터 갱신)
+                function changePage(page, type) {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    urlParams.set(type + '_page', page);
+                    urlParams.set('section', type);
+
+                    fetch(`?${urlParams.toString()}`)
+                        .then(response => response.text())
+                        .then(data => {
+                            document.getElementById(type + '-section').innerHTML =
+                                new DOMParser().parseFromString(data, "text/html")
+                                    .getElementById(type + '-section').innerHTML;
+
+                            scrollToSection(type + '-section'); // 해당 섹션으로 스크롤 이동
+                        });
+                }
+
+                // ✅ 특정 섹션 보이기
+                function showSection(sectionId) {
+                    document.querySelectorAll('.section').forEach(section => {
+                        section.style.display = 'none';
+                    });
+                    const section = document.getElementById(sectionId);
+                    if (section) {
+                        section.style.display = 'block';
+                    }
+                }
+
+                // ✅ 특정 섹션으로 스크롤 이동
+                function scrollToSection(sectionId) {
+                    const section = document.getElementById(sectionId);
+                    if (section) {
+                        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                }
+
+            </script>
+
+        </div>
+        </div>
+
+        <div class="bg-white shadow rounded-lg">
+            <section id="member-section">
+                <div class="p-6">
+                    <h2 class="text-lg font-medium text-gray-900 mb-6">회원 목록</h2>
+                    <div class="grid grid-cols-3 gap-4 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">회원 ID</label>
+                            <input type="text" id="searchId"
+                                class="w-full border-gray-300 focus:border-custom focus:ring-custom"
+                                onkeyup="searchMembers()">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">회원명</label>
+                            <input type="text" id="searchName"
+                                class="w-full border-gray-300 focus:border-custom focus:ring-custom"
+                                onkeyup="searchMembers()">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">사원번호</label>
+                            <input type="text" id="searchEmpNo"
+                                class="w-full border-gray-300 focus:border-custom focus:ring-custom"
+                                onkeyup="searchMembers()">
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        {% set member_total_count = total_members %}
+                        {% set member_items_per_page = per_page %}
+                        {% set member_current_page = member_current_page %}
+                        {% set member_total_pages = member_total_pages %}
+                        {% set member_start_idx = member_start_idx %}
+                        {% set member_end_idx = member_end_idx %}
+
+
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        No.</th>
+                                    <th class="text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        회원ID</th>
+                                    <th class="text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        사번</th>
+                                    <th class="text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        회원명</th>
+                                    <th class="text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        이메일</th>
+                                    <th class="text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        권한레벨</th>
+                                    <th class="text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        가입날짜</th>
+                                    <th class="text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        상태</th>
+                                    <th class="text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        관리</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200" id = "memberTableBody">
+                                {% if all_members %}
+                                {% for member in all_members %}
+                                <tr>
+                                    <td class="text-center px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{
+                                        member_total_count - loop.index0 - member_start_idx }}</td>
+                                    <td class="text-center px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{
+                                        member.userid }}</td>
+                                    <td class="text-center px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{
+                                        member.emp_no }}</td>
+                                    <td class="text-center px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{
+                                        member.username }}</td>
+                                    <td class="text-center px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{
+                                        member.userEmail }}</td>
+                                    <td class="text-center px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        {% if member.userLevel == 0 %}
+                                        미승인 회원
+                                        {% elif member.userLevel == 1 %}
+                                        일반회원
+                                        {% elif member.userLevel == 100 %}
+                                        관리자
+                                        {% elif member.userLevel == 1000 %}
+                                        최고 관리자
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center px-6 py-4 whitespace-nowrap text-sm text-gray-900">2025-03-14
+                                        12:30</td>
+                                    <td class="text-center px-6 py-4 whitespace-nowrap">
+                                        {% if member.userLevel == 0 %}
+                                        <span
+                                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-black-800">미승인</span>
+                                        {% elif member.userLevel > 0 %}
+                                        <span
+                                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">승인</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <!-- 관리 버튼 -->
+                                        <button onclick="location.href='/edit_member/{{ member.userid }}'"
+                                            class="text-custom hover:text-indigo-900 mr-3">
+                                            관리
+                                        </button>
+
+                                        <!-- 삭제 버튼 -->
+                                        <button onclick="deleteMember('{{ member.userid }}')"
+                                            class="text-red-600 hover:text-red-900">
+                                            삭제
+                                        </button>
+
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                {% else %}
+                                <td colspan = "9" class="text-center px-6 py-4 whitespace-nowrap text-sm text-gray-900"> 등록된 회원이 없습니다.</td>
+                                {% endif %}
+
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="flex items-center justify-between mt-4">
+                        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                            <p class="text-sm text-gray-700">
+                                총 <span class="font-medium">{{ member_total_count }}</span> 건 중
+                                <span class="font-medium">{{all_members | length}} </span> 건 표시
+                            </p>
+                            {% if all_members %}
+                            <div>
+                                <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
+                                    aria-label="Pagination">
+                                    <button
+                                        class="!rounded-button relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                                        onclick="changePage({{ member_current_page - 1 }}, 'member')" {% if
+                                        member_current_page==1 %}disabled{% endif %}>
+                                        <span class="sr-only">이전</span>
+                                        <i class="fas fa-chevron-left"></i>
+                                    </button>
+                                    {% for page in range(1, member_total_pages + 1) %}
+                                    <button
+                                        class="!rounded-button relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium 
+    {% if page == member_current_page %} text-indigo-600 bg-indigo-100 {% else %} text-gray-700 hover:bg-gray-50 {% endif %}"
+                                        onclick="changePage({{ page }}, 'member')">
+                                        {{ page }}
+                                    </button>
+                                    {% endfor %}
+                                    <button
+                                        class="!rounded-button relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                                        onclick="changePage({{ member_current_page + 1 }}, 'member')" {% if
+                                        member_current_page==member_total_pages %}disabled{% endif %}>
+                                        <span class="sr-only">다음</span>
+                                        <i class="fas fa-chevron-right"></i>
+                                    </button>
+                                </nav>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <script>
+        alert("{{ messages[0] }}"); 
+    </script>
+    {% endif %}
+    {% endwith %}
+</body>
+
+</html>
