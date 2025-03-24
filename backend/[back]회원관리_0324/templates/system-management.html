@@ -371,31 +371,37 @@
                 </tr>
             </thead>
             <tbody>
-                {% for request in request_history%}
-                <tr>
-                    <td>{{request.created_at}}</td>
-                    <td>
-                        {% if request.categoryIdx == 1 %}
-                            CNN모델 성능 점검
-                        {% elif request.categoryIdx == 2 %}
-                            ESP32 성능 점검
-                        {% elif request.categoryIdx == 3 %}
-                            사이트 점검
-                        {% elif request.categoryIdx == 4%}
-                            기타 문의
-                        {% endif %}
-                    </td>
-                    <td class="truncate">{{request.applyTitle}}</td>
-                    <td class="truncate">{{ request.applyContent }}</td>
-                    <td>
-                        {% if request.applyFileName %}
-                            <a href="{{ url_for('download_file', filename=request.applyFileName) }}">{{request.applyFileName}}</a>
-                        {% else %}
-                            없음
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
+                {% if request_history%}
+                    {% for request in request_history%}
+                    <tr>
+                        <td>{{request.created_at}}</td>
+                        <td>
+                            {% if request.categoryIdx == 1 %}
+                                CNN모델 성능 점검
+                            {% elif request.categoryIdx == 2 %}
+                                ESP32 성능 점검
+                            {% elif request.categoryIdx == 3 %}
+                                사이트 점검
+                            {% elif request.categoryIdx == 4%}
+                                기타 문의
+                            {% endif %}
+                        </td>
+                        <td class="truncate">{{request.applyTitle}}</td>
+                        <td class="truncate">{{ request.applyContent }}</td>
+                        <td>
+                            {% if request.applyFileName %}
+                                <a href="{{ url_for('download_file', filename=request.applyFileName) }}">{{request.applyFileName}}</a>
+                            {% else %}
+                                없음
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="5">점검 요청 내역이 없습니다.</td>
+                    </tr>
+                {% endif %}
             </tbody>
         </table>
     </div>
