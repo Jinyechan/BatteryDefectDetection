@@ -1,444 +1,75 @@
-<!-- templates/system-management.html -->
 {% extends "base.html" %}
 
 {% block title %}시스템 관리{% endblock %}
 
-<link rel="stylesheet" href="{{ url_for('static', filename='css/system-management.css') }}">
-<script src="{{ url_for('static', filename='js/system-management.js') }}" defer></script>
-
 {% block content %}
-<style>
-/* ============================== */
-/* 탭 메뉴 */
-/* ============================== */
+<div class="system-management">
+    <h1>📋 시스템 관리</h1>
+    
+    <!-- 연결 상태 -->
+    <section class="connection-status">
+        <h2>ESP32 기기 연결 상태</h2>
+        <p>연결 상태: <span style="color: green; font-weight: bold;">연결 양호</span></p>
+    </section>
 
-.tabs {
-    display: flex;
-    gap: 15px;
-    margin-bottom: 30px;
-    justify-content: flex-start;
-}
-
-.tab {
-    padding: 10px 20px;
-    background: #f1f3f5;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background 0.3s ease-in-out, color 0.3s ease-in-out;
-}
-
-.tab.active {
-    background: #2c3e50;
-    color: white;
-}
-
-/* ============================== */
-/* 상태 패널 */
-/* ============================== */
-
-.status-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-    margin-bottom: 30px;
-}
-
-.status-box {
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-/* 상태 텍스트 */
-.status-good {
-    color: #2ecc71;
-    font-weight: 600;
-}
-
-.status-bad {
-    color: #e74c3c;
-    font-weight: 600;
-}
-
-/* ============================== */
-/* 폼 스타일 */
-/* ============================== */
-
-.form-section {
-    background: white;
-    padding: 25px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    margin-bottom: 30px;
-}
-
-.form-section h2 {
-    font-size: 18px;
-    margin-bottom: 15px;
-    color: #2c3e50;
-}
-
-.form-group {
-    margin-bottom: 20px;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 8px;
-    color: #666;
-}
-
-.form-input {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
-    transition: border-color 0.3s ease-in-out;
-}
-
-.form-input:focus {
-    border-color: #3498db;
-    outline: none;
-    box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
-}
-
-/* 폼 그리드 */
-.form-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-    margin-bottom: 25px;
-}
-
-/* 라디오 버튼 */
-.radio-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 12px;
-}
-
-/* 이메일 입력 그룹 */
-.email-group {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-/* ============================== */
-/* 파일 업로드 버튼 */
-/* ============================== */
-
-.file-input-wrap {
-    margin: 20px 0;
-}
-
-.file-btn {
-    display: inline-block;
-    padding: 8px 15px;
-    background: #f1f3f5;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background 0.2s ease-in-out;
-}
-
-.file-btn:hover {
-    background: #e9ecef;
-}
-
-.file-name {
-    margin-left: 10px;
-    color: #666;
-}
-
-/* ============================== */
-/* 버튼 스타일 */
-/* ============================== */
-
-.button-group {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-top: 20px;
-}
-
-.btn {
-    padding: 8px 20px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: background 0.3s ease-in-out, transform 0.2s ease-in-out;
-}
-
-.btn-cancel {
-    background: #f8f9fa;
-    border: 1px solid #ddd;
-    color: #333;
-}
-
-.btn-cancel:hover {
-    background: #e9ecef;
-}
-
-.btn-submit {
-    background: #2c3e50;
-    color: white;
-    border: none;
-}
-
-.btn-submit:hover {
-    background: #1a252f;
-    transform: translateY(-2px);
-}
-
-/* ============================== */
-/* 요청 테이블 */
-/* ============================== */
-
-.request-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-}
-
-.request-table th,
-.request-table td {
-    padding: 12px 15px;
-    text-align: left;
-    border-bottom: 1px solid #eee;
-}
-
-.request-table th {
-    background: #f8f9fa;
-    font-weight: 600;
-    color: #555;
-}
-
-/* 테이블 호버 효과 */
-.request-table tr:hover {
-    background: #f1f3f5;
-    transition: background 0.2s ease-in-out;
-}
-
-/* ============================== */
-/* 반응형 디자인 */
-/* ============================== */
-
-@media (max-width: 768px) {
-    .status-container {
-        grid-template-columns: 1fr;
-    }
-
-    .form-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .button-group {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .btn {
-        width: 100%;
-    }
-}
-
-
-</style>
-
-
-<!-- 상태 정보 - 상단으로 이동 -->
-<div class="status-container">
-    <div class="status-box">
-        <h3>📷 ESP32 기기연결 상태</h3>
-        <p class="status-good">연결 양호</p>
-    </div>
-    <div class="status-box">
-        <h3>🔌 아두이노 시스템 연결 상태</h3>
-        <p class="status-bad">연결 상태 확인 필요</p>
-    </div>
-</div>
-
-<!-- 탭 메뉴 -->
-<div class="tabs">
-    <div class="tab active" onclick="showTab('request')">점검 요청하기</div>
-    <div class="tab" onclick="showTab('history')">점검 요청 내역</div>
-</div>
-
-<!-- 점검 요청 폼 -->
-<div id="request" class="tab-content">
-    <div class="form-section">
-        <h2>점검 분야</h2>
-        <div class="form-grid">
-            <div class="radio-item">
-                <input type="radio" id="check1" name="checkType" value="CNN모델 성능 점검">
-                <label for="check1">CNN모델 성능 점검</label>
+    <!-- 점검 요청 -->
+    <section class="request-form">
+        <h2>점검 요청하기</h2>
+        <form action="/submit-request" method="post" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="name">이름:</label>
+                <input type="text" id="name" name="name" required>
             </div>
-            <div class="radio-item">
-                <input type="radio" id="check2" name="checkType" value="ESP32 성능 점검">
-                <label for="check2">ESP32 성능 점검</label>
-            </div>
-            <div class="radio-item">
-                <input type="radio" id="check3" name="checkType" value="아두이노 소리 점검">
-                <label for="check3">아두이노 소리 점검</label>
-            </div>
-            <div class="radio-item">
-                <input type="radio" id="check4" name="checkType" value="기타 문의">
-                <label for="check4">기타 문의</label>
-            </div>
-        </div>
-
-        <h2>요청 정보</h2>
-        <div class="form-group">
-            <label>이름</label>
-            <input type="text" class="form-input" id="userName">
-        </div>
-
-        <div class="form-group">
-            <label>이메일</label>
-            <div class="email-group">
-                <input type="text" class="form-input" id="emailId" placeholder="아이디" style="flex: 1;">
-                <span>@</span>
-                <input type="text" class="form-input" id="emailDomain" placeholder="도메인" style="flex: 1;">
-                <select class="form-input" id="emailExt" style="width: 100px;">
-                    <option>.com</option>
-                    <option>.net</option>
-                    <option>.co.kr</option>
+            <div class="form-group">
+                <label for="email">이메일:</label>
+                <input type="email" id="email" name="email" required>
+                <select name="domain">
+                    <option value=".com">.com</option>
+                    <option value=".net">.net</option>
+                    <option value=".co.kr">.co.kr</option>
                 </select>
             </div>
-        </div>
-
-        <div class="form-group">
-            <label>제목</label>
-            <input type="text" class="form-input" id="subject">
-        </div>
-
-        <div class="form-group">
-            <label>내용</label>
-            <textarea class="form-input" rows="5" id="content"></textarea>
-        </div>
-
-        <div class="form-group">
-            <label>파일첨부</label>
-            <div class="file-input-wrap">
-                <label class="file-btn" for="file-upload">파일 선택</label>
-                <input type="file" id="file-upload" style="display:none" onchange="showFileName()">
-                <span id="fileName" class="file-name">선택된 파일 없음</span>
+            <div class="form-group">
+                <label for="title">제목:</label>
+                <input type="text" id="title" name="title" required>
             </div>
-        </div>
+            <div class="form-group">
+                <label for="content">내용:</label>
+                <textarea id="content" name="content" rows="5" required></textarea>
+            </div>
+            <div class="form-group">
+                <label for="file">파일 첨부:</label>
+                <input type="file" id="file" name="file">
+            </div>
+            <button type="submit">제출</button>
+            <button type="reset">취소</button>
+        </form>
+    </section>
 
-        <div class="button-group">
-            <button class="btn btn-cancel" onclick="resetForm()">취소</button>
-            <button class="btn btn-submit" onclick="submitRequest()">제출</button>
-        </div>
-    </div>
-</div>
-
-<!-- 점검 요청 내역 -->
-<div id="history" class="tab-content" style="display:none;">
-    <div class="form-section">
-        <h2>점검 요청 내역</h2>
-        <table class="request-table" id="requestHistoryTable">
+    <!-- 요청 내역 -->
+    <section class="request-history">
+        <h2>요청 내역</h2>
+        <table border="1">
             <thead>
-                <tr>
-                    <th>요청일자</th>
-                    <th>제목</th>
-                    <th>상태</th>
-                </tr>
+                <tr><th>요청일자</th><th>제목</th><th>상태</th></tr>
             </thead>
             <tbody>
-                <tr>
-                    <td>2025-03-10</td>
-                    <td>CNN 모델 성능 개선 요청</td>
-                    <td><span class="status-bad">처리중</span></td>
-                </tr>
-                <tr>
-                    <td>2025-03-05</td>
-                    <td>ESP32 펌웨어 업데이트</td>
-                    <td><span class="status-good">완료</span></td>
-                </tr>
+                <tr><td>2025-03-10</td><td>CNN 모델 성능 개선 요청</td><td>처리중</td></tr>
+                <tr><td>2025-03-05</td><td>ESP32 펌웨어 업데이트</td><td>완료</td></tr>
             </tbody>
         </table>
-        </div>
+    </section>
 
-<script>
-    // 파일명 표시
-    function showFileName() {
-        const fileInput = document.getElementById('file-upload');
-        const fileName = document.getElementById('fileName');
-        if (fileInput.files.length > 0) {
-            fileName.textContent = fileInput.files[0].name;
-        } else {
-            fileName.textContent = '선택된 파일 없음';
-        }
-    }
-    
-    // 폼 초기화
-    function resetForm() {
-        document.querySelectorAll('input[type="text"], textarea').forEach(input => {
-            input.value = '';
-        });
-        document.querySelectorAll('input[type="radio"]').forEach(radio => {
-            radio.checked = false;
-        });
-        document.getElementById('fileName').textContent = '선택된 파일 없음';
-    }
-    
-    // 탭 전환
-    function showTab(tabId) {
-        document.querySelectorAll('.tab-content').forEach(content => {
-            content.style.display = 'none';
-        });
-        document.getElementById(tabId).style.display = 'block';
-        
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.classList.remove('active');
-        });
-        event.target.classList.add('active');
-    }
-    
-    // 요청 제출
-    function submitRequest() {
-        // 입력값 가져오기
-        const checkType = document.querySelector('input[name="checkType"]:checked')?.value || '';
-        const userName = document.getElementById('userName').value;
-        const emailId = document.getElementById('emailId').value;
-        const emailDomain = document.getElementById('emailDomain').value;
-        const emailExt = document.getElementById('emailExt').value;
-        const subject = document.getElementById('subject').value;
-        
-        // 간단한 유효성 검사
-        if (!checkType || !userName || !emailId || !emailDomain || !subject) {
-            alert('필수 항목을 모두 입력해주세요.');
-            return;
-        }
-        
-        // 현재 날짜 생성
-        const today = new Date();
-        const dateString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-        
-        // 테이블에 새 행 추가
-        const table = document.getElementById('requestHistoryTable').getElementsByTagName('tbody')[0];
-        const newRow = table.insertRow(0);
-        
-        const cell1 = newRow.insertCell(0);
-        const cell2 = newRow.insertCell(1);
-        const cell3 = newRow.insertCell(2);
-        
-        cell1.innerHTML = dateString;
-        cell2.innerHTML = subject;
-        cell3.innerHTML = '<span class="status-bad">처리중</span>';
-        
-        // 폼 초기화
-        resetForm();
-        
-        // 점검 요청 내역 탭으로 전환
-        showTab('history');
-        
-        alert('점검 요청이 성공적으로 제출되었습니다.');
-    }
-</script>
+    <!-- 점검 분야 -->
+    <section class="inspection-fields">
+        <h2>점검 분야 선택</h2>
+        <ul style="list-style-type: disc;">
+            <li>CNN 모델 성능 점검</li>
+            <li>ESP32 성능 점검</li>
+            <li>기타 문의</li>
+        </ul>
+    </section>
+
+</div>
+
 {% endblock %}

@@ -8,7 +8,7 @@ if defined _OLD_CODEPAGE (
     "%SystemRoot%\System32\chcp.com" 65001 > nul
 )
 
-set VIRTUAL_ENV=C:\Users\606-19\Desktop\불량감자\BatteryDefectDetection\venv
+set VIRTUAL_ENV=C:\Users\606-19\Desktop\potato\BatteryDefectDetection\venv
 
 if not defined PROMPT set PROMPT=$P$G
 

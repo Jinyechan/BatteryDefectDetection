@@ -1,209 +1,88 @@
-<!DOCTYPE html>
-<html lang="ko">
+{% extends "base.html" %}
+{% block title %}마이페이지{% endblock %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>마이페이지</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="/static/css/mypage.css">
-    <script>
-        window.onload = function () {
-            const emailInput = document.getElementById('email');
-            const domainInput = document.getElementById('domain');
-            const domainSelect = document.getElementById('domainSelect');
+<link rel="stylesheet" href="{{ url_for('static', filename='css/mypage.css') }}">
+<script src="{{ url_for('static', filename='js/mypage.js') }}" defer></script>
 
-            function getDomainFromEmail(email) {
-                const atIndex = email.indexOf('@');
-                if (atIndex !== -1) {
-                    return email.substring(atIndex + 1);
-                }
-                return '';
-            }
+{% block content %}
+<form class="form-container" action="/update_member" method="post">
+    <div class="form-group">
+        <label class="form-label">사번</label>
+        <input type="text" class="form-input" value="{{ mydata.emp_no }}" name="emp_no">
+    </div>
 
-            const initialEmail = emailInput.value;
-            const initialDomain = getDomainFromEmail(initialEmail);
-            domainInput.value = initialDomain;
+    <div class="form-group">
+        <label class="form-label">아이디</label>
+        <input type="text" class="form-input readonly" value="{{ mydata.userid }}" name="userid" readonly>
+    </div>
 
-            for (let i = 0; i < domainSelect.options.length; i++) {
-                if (domainSelect.options[i].value === initialDomain) {
-                    domainSelect.selectedIndex = i;
-                    break;
-                }
-            }
+    <div class="form-group">
+        <label class="form-label">이름</label>
+        <input type="text" class="form-input readonly" value="{{ mydata.username }}" name="username" readonly>
+    </div>
 
-            domainSelect.addEventListener('change', function () {
-                const selectedValue = this.value;
-                if (selectedValue === '기타 입력') {
-                    domainInput.value = '';
-                    domainInput.removeAttribute('readonly');
-                    domainInput.focus();
-                } else {
-                    domainInput.value = selectedValue;
-                    domainInput.setAttribute('readonly', true);
-                }
-            });
-
-            document.querySelector(".form-container").addEventListener("submit", function (event) {
-                let password = document.querySelector("#password").value;
-                let confirmPassword = document.querySelector('#confirmPassword').value;
-
-                if (password || confirmPassword) {
-                    if (password.length < 4) {
-                        alert("비밀번호는 4자리 이상이어야 합니다.");
-                        event.preventDefault();
-                        return;
-                    }
-
-                    if (password !== confirmPassword) {
-                        alert("비밀번호가 일치하지 않습니다.");
-                        event.preventDefault();
-                        return;
-                    }
-                }
-
-                // 회원정보 변경 알림창
-                alert("회원정보가 변경되었습니다.");
-            });
-        };
-
-        function confirmWithdrawal() {
-            if (confirm("정말로 회원 탈퇴하시겠습니까?")) {
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = '/withdraw';
-                document.body.appendChild(form);
-                form.submit();
-            }
-        }
-
-    
-    </script>
-</head>
-
-<body>
-    <header class="header">
-        <div class="status-alert">
-            <div class="status-indicator"></div>
-            <span>연결상태 확인 필요</span>
+    <div class="form-group">
+        <label class="form-label">이메일</label>
+        <div class="email-group">
+            {% set email_parts = mydata.userEmail.split('@') %}
+            <input type="text" class="form-input" name="email1" value="{{ email_parts[0] }}">
+            <span>@</span>
+            <input id="domain" type="text" class="form-input domainInput" name="email2"
+                   value="{{ email_parts[1] }}" readonly>
+            <select id="domainSelect" class="form-input domainSelect">
+                <option value="" disabled selected>선택하세요</option>
+                <option value="naver.com">naver.com</option>
+                <option value="gmail.com">gmail.com</option>
+                <option value="hanmail.net">hanmail.net</option>
+                <option value="기타 입력">기타 입력</option>
+            </select>
         </div>
-        <div class="header-center">스마트 팩토리 관리 시스템</div>
-        <div class="notification-panel">
-            <i class="fas fa-bell"></i>
-            <a href="#" class="logout-btn" onclick="logout()">로그아웃</a>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label">전화번호</label>
+        <div class="phone-group">
+            {% set phone_parts = mydata.userPhone.split('-') %}
+            <input type="text" class="form-input" name="phone1" value="{{ phone_parts[0] }}" maxlength="3">
+            <span>-</span>
+            <input type="text" class="form-input" name="phone2" value="{{ phone_parts[1] }}" maxlength="4">
+            <span>-</span>
+            <input type="text" class="form-input" name="phone3" value="{{ phone_parts[2] }}" maxlength="4">
         </div>
-    </header>
+    </div>
 
-    <nav class="sidebar">
-        <ul class="nav-menu">
-            <li class="nav-item"><a href="dashboard.html"><i class="fas fa-th-large"></i> 대시보드</a></li>
-            <li class="nav-item">
-                <a href="analysis.html"><i class="fas fa-search"></i> 불량분석</a>
-                <ul class="submenu">
-                    <li><a href="status.html">불량 현황</a></li>
-                    <li><a href="detail-analysis.html">불량 상세분석</a></li>
-                </ul>
-            </li>
-            <li class="nav-item"><a href="prediction.html"><i class="fas fa-chart-line"></i> 불량예측</a></li>
-            <li class="nav-item active"><a href="mypage.html"><i class="fas fa-user"></i> 마이페이지</a></li>
-            <li class="nav-item">
-                <a href="settings.html"><i class="fas fa-cog"></i> 시스템설정</a>
-                <ul class="submenu">
-                    <li><a href="system-management.html">시스템 관리</a></li>
-                    <li><a href="criteria-setting.html">불량기준설정</a></li>
-                </ul>
-            </li>
-        </ul>
-    </nav>
-
-    <main class="main-content">
-        <form class="form-container" action="/update_member" method="post">
-            <div class="form-group">
-                <label class="form-label">사번</label>
-                <input type="text" class="form-input" value="{{ mydata.emp_no }}" name="emp_no">
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">아이디</label>
-                <input type="text" class="form-input readonly" value="{{ mydata.userid }}" name="userid" readonly>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">이름</label>
-                <input type="text" class="form-input readonly" value="{{ mydata.username }}" id="username"
-                    name="username" readonly>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">이메일</label>
-                <div class="email-group">
-                    {% set email_parts = mydata.userEmail.split('@') %}
-                    <input type="text" class="form-input" name="email1" value="{{ email_parts[0] }}">
-                    <span>@</span>
-                    <input id="domain" type="text" class="form-input domainInput" name="email2"
-                        value="{{ email_parts[1] }}" readonly>
-                    <select id="domainSelect" class="form-input domainSelect">
-                        <option value="" disabled selected>선택하세요</option>
-                        <option value="naver.com">naver.com</option>
-                        <option value="gmail.com">gmail.com</option>
-                        <option value="hanmail.net">hanmail.net</option>
-                        <option value="기타 입력">기타 입력</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">전화번호</label>
-                <div class="phone-group">
-                    {% set phone_parts = mydata.userPhone.split('-') %}
-                    <input type="text" class="form-input" name="phone1" value="{{ phone_parts[0] }}" maxlength="3">
-                    <span>-</span>
-                    <input type="text" class="form-input" name="phone2" value="{{ phone_parts[1] }}" maxlength="4">
-                    <span>-</span>
-                    <input type="text" class="form-input" name="phone3" value="{{ phone_parts[2] }}" maxlength="4">
-                </div>
-            </div>
-
-            {% if session.get('userLevel', 0)|int >= 100 %} 
-            <div class="form-group">
-                <label class="form-label">회원 레벨</label>
-                <div class="level-group">
-                    <!-- 관리자만 레벨 변경 가능 -->
-                    {% set user_levels = {0: '미승인 회원', 1: '일반회원', 100: '관리자회원', 1000: '최고 관리자'} %}
-                    <select id="userLevelSelect" name="userLevel" class="form-input">
-                        {% for level, label in user_levels.items() %}
-                        <option value="{{ level }}" {% if level==mydata.userLevel %}selected{% endif %}>
-                            {{ label }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
-            </div>
-            {% endif %}
-
-            <div class="form-group">
-                <label class="form-label">새 비밀번호</label>
-                <input type="password" class="form-input" name="password" id="password">
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">비밀번호 확인</label>
-                <input type="password" class="form-input" name="confirmPassword" id="confirmPassword">
-            </div>
-
-            <div class="button-group">
-                <button class="btn btn-delete" type="button" onclick="confirmWithdrawal()">회원탈퇴</button>
-                <button class="btn btn-cancel" type="button" onclick="window.history.back()">취소</button>
-                <button class="btn btn-save" type="submit">저장</button>
-            </div>
-        </form>
-    </main>
-
-    {% if alert_message %}
-    <script>
-        alert("{{ alert_message }}");  // 경고창으로 표시
-    </script>
+    {% if session.get('userLevel', 0)|int >= 100 %}
+    <div class="form-group">
+        <label class="form-label">회원 레벨</label>
+        <select id="userLevelSelect" name="userLevel" class="form-input">
+            {% set user_levels = {0: '미승인 회원', 1: '일반회원', 100: '관리자회원', 1000: '최고 관리자'} %}
+            {% for level, label in user_levels.items() %}
+                <option value="{{ level }}" {% if level == mydata.userLevel %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </div>
     {% endif %}
-</body>
 
-</html>
+    <div class="form-group">
+        <label class="form-label">새 비밀번호</label>
+        <input type="password" class="form-input" name="password" id="password">
+    </div>
+
+    <div class="form-group">
+        <label class="form-label">비밀번호 확인</label>
+        <input type="password" class="form-input" name="confirmPassword" id="confirmPassword">
+    </div>
+
+    <div class="button-group">
+        <button class="btn btn-delete" type="button" onclick="confirmWithdrawal()">회원탈퇴</button>
+        <button class="btn btn-cancel" type="button" onclick="window.history.back()">취소</button>
+        <button class="btn btn-save" type="submit">저장</button>
+    </div>
+</form>
+
+{% if alert_message %}
+<script>
+    alert("{{ alert_message }}");
+</script>
+{% endif %}
+{% endblock %}

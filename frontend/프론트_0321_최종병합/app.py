@@ -1,6 +1,8 @@
 from flask import Flask, render_template, flash, request, redirect, url_for, session, jsonify
 from models import DBManager
 from argon2 import PasswordHasher
+from flask import Flask, jsonify, request
+import pandas as pd
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
@@ -186,7 +188,7 @@ def reset_password():
     return render_template('reset_password.html', userid=userid)
 
 @app.route('/mypage', methods=['GET'])
-def view_mypage():
+def mypage():
     if 'userid' not in session:
         flash("로그인 후 접근해 주세요.")
         return redirect(url_for('login'))
@@ -402,6 +404,37 @@ def search_members():
     except Exception as e:
         print(f"검색 중 오류 발생: {str(e)}")
         return jsonify({'success': False, 'message': f'검색 중 오류: {str(e)}'})
+    
+# ======================== 데이터 관련 ========================
+
+def load_data():
+    # final_battery.ipynb 내 CSV 혹은 데이터셋 경로 또는 처리 함수에서 데이터프레임 가져오기
+    df = pd.read_csv("your_processed_data.csv")  # or define in-memory via nbconvert or papermill
+    return df
+
+@app.route("/api/chart_data")
+def chart_data():
+    chart_type = request.args.get("type")  # line or bar
+    period = request.args.get("period")    # daily, weekly, monthly
+
+    df = load_data()
+
+    if chart_type == "line":
+        # 예시 집계
+        result = df.groupby("라인")[period].mean()
+        return jsonify({
+            "labels": result.index.tolist(),
+            "values": result.values.tolist()
+        })
+
+    elif chart_type == "bar":
+        result = df.groupby("날짜")[period].mean().sort_index()
+        return jsonify({
+            "labels": result.index.tolist(),
+            "values": result.values.tolist()
+        })
+
+
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=8080, debug=True)
