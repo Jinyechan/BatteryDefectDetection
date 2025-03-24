@@ -1,9 +1,29 @@
 from flask import Flask, render_template, flash, request, redirect, url_for, session, jsonify
 from models import DBManager
 from argon2 import PasswordHasher
+from werkzeug.utils import secure_filename
+import os
+import re
+from flask import send_from_directory, abort, current_app
+
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
+
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # 현재 파일(app.py)의 디렉토리
+UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'uploads')  # static/uploads 폴더 경로
+
+# Flask 설정에 업로드 폴더 추가
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# 앱 시작 시 업로드 폴더 생성
+if not os.path.exists(UPLOAD_FOLDER):
+    try:
+        os.makedirs(UPLOAD_FOLDER)
+        print(f"업로드 폴더 생성 완료: {UPLOAD_FOLDER}")
+    except Exception as e:
+        print(f"업로드 폴더 생성 중 오류 발생: {str(e)}")
 
 manager = DBManager()
 ph = PasswordHasher()
@@ -432,59 +452,78 @@ def system_management():
     
     return render_template('system-management.html', user_info=user_info)
 
+
+# 점검 요청하기 페이지 
 @app.route('/apply_management', methods=['GET', 'POST'])
 def apply_management():
-    if request.method == 'POST':
-        # POST 요청 데이터 가져오기
-        categoryIdx = request.form.get('categoryIdx')
-        userid = request.form.get('userid')
-        email = request.form.get('email')
-        emailDomain = request.form.get('emailDomain')
-        applyTitle = request.form.get('applyTitle')
-        applyContent = request.form.get('applyContent')
-        applyFileName = request.form.get('applyFileName')
+    if 'userid' not in session:
+        flash("로그인 후 접근해 주세요.")
+        return redirect(url_for('login'))
 
-        # 모든 필드의 값 검증
-        if not categoryIdx or not userid or not email or not emailDomain or not applyTitle or not applyContent:
-            user_id = session.get('userid')
-            user_info = manager.get_user_info(user_id) if user_id else None
-            return render_template('system-management.html', alert_message="모든 필드를 입력해 주세요.", user_info=user_info)
+    user_id = session.get('userid')
+    user_info = manager.get_user_info(user_id)
 
-        userEmail = f"{email}@{emailDomain}"
+    categoryIdx = request.form.get('categoryIdx')
+    email = request.form.get('email')
+    emailDomain = request.form.get('emailDomain')
+    applyTitle = request.form.get('applyTitle')
+    applyContent = request.form.get('applyContent')
+    applyFile = request.files.get('applyFileName')  # 업로드된 파일 가져오기
 
-        # 데이터베이스 삽입 로직
-        success = manager.insert_apply(categoryIdx, userid, userEmail, applyTitle, applyContent, applyFileName)
 
-        user_id = session.get('userid')
-        user_info = manager.get_user_info(user_id) if user_id else None
+    request_history = manager.get_apply_history(user_id)  # 유저의 요청 내역 가져오기
 
-        if success:
-            return render_template(
-                'system-management.html',
-                alert_message="요청사항이 성공적으로 등록되었습니다.",
-                user_info=user_info
-            )
+    if not categoryIdx or not user_id or not email or not emailDomain or not applyTitle or not applyContent:
+        return render_template('system-management.html', alert_message="모든 필드를 입력해 주세요.", user_info=user_info, request_history = request_history)
+
+    userEmail = f"{email}@{emailDomain}"
+    file_path = None
+    filename = None  # filename 초기화
+
+    try:
+        if applyFile and applyFile.filename:
+            # 파일명에서 안전한 문자만 유지 (한글 포함)
+            filename = applyFile.filename
+            filename = re.sub(r'[^\w가-힣.-]', '_', filename)  # 한글, 영문, 숫자, .(점), -(하이픈) 허용
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+
+            # 동일한 파일명이 존재하면 "_1", "_2" 붙이기
+            counter = 1
+            original_filename = filename
+            while os.path.exists(file_path):
+                name, ext = os.path.splitext(original_filename)
+                filename = f"{name}_{counter}{ext}"
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                counter += 1
+
+            applyFile.save(file_path)
+            print(f"파일 경로: {file_path}")
         else:
-            return render_template(
-                'system-management.html',
-                alert_message="요청사항 등록에 실패하였습니다.",
-                user_info=user_info
-            )
+            print("첨부 파일 없음")
+
+    except Exception as e:
+        print(f"파일 저장 오류: {str(e)}")
+        return render_template('system-management.html', alert_message="파일 저장 중 오류 발생.", user_info=user_info, request_history = request_history)
+
+    # DB 저장
+    success, error_message = manager.insert_apply(categoryIdx, user_id, userEmail, applyTitle, applyContent, filename)
+
+    if success:
+        flash("요청이 성공적으로 등록되었습니다.", "success")
+        return redirect(url_for('apply_management'))  
     else:
-        # GET 요청 처리
-        if 'userid' not in session:
-            flash("로그인 후 접근해 주세요.")
-            return redirect(url_for('login'))
+        flash(f"요청 등록 실패: {error_message}", "error")
+        return redirect(url_for('apply_management')) 
+    
+@app.route('/download/<filename>', methods=['GET'])
+def download_file(filename):
+    try:
+        # static/uploads 폴더에서 파일을 다운로드합니다.
+        return send_from_directory(current_app.config['UPLOAD_FOLDER'], filename, as_attachment=True)
+    except FileNotFoundError:
+        abort(404)  # 파일이 존재하지 않을 경우 404 오류 반환
+    
 
-        user_id = session['userid']
-        user_info = manager.get_user_info(user_id)
-        
-        return render_template('system-management.html', user_info=user_info)
-
-
-
-
-# 파일 업로드처리, 점검 신청 내역 조회, 점검 요청 상태 컬럼 추가
-
+    
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=8080, debug=True)

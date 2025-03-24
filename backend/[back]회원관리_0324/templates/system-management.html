@@ -226,6 +226,13 @@
         transition: background 0.2s ease-in-out;
     }
 
+    .truncate {
+        max-width: 150px; /* 최대 너비 설정 */
+        overflow: hidden; /* 넘치는 내용 숨기기 */
+        text-overflow: ellipsis; /* 넘치는 내용에 '...' 표시 */
+        white-space: nowrap; /* 텍스트를 한 줄로 유지 */
+    }
+
     /* ============================== */
     /* 반응형 디자인 */
     /* ============================== */
@@ -268,7 +275,7 @@
     <div class="tab" onclick="showTab('history')">점검 요청 내역</div>
 </div>
 
-<form action="/apply_management" method="POST">
+<form action="/apply_management" method="POST" enctype="multipart/form-data">
 <div id="request" class="tab-content">
     <div class="form-section">
         <h2>점검 분야</h2>
@@ -338,11 +345,15 @@
         </div>
     </div>
 </div>
-{% if alert_message %}
-<script type="text/javascript">
-    alert("{{ alert_message }}");
-</script>
-{% endif %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <script>
+                alert("{{ message }}");
+            </script>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
 </form>
 
 <!-- 점검 요청 내역 -->
@@ -352,22 +363,39 @@
         <table class="request-table" id="requestHistoryTable">
             <thead>
                 <tr>
-                    <th>요청일자</th>
-                    <th>제목</th>
-                    <th>상태</th>
+                    <th style="width: 15%;">요청일자</th>
+                    <th style="width: 15%;">점검 분야</th>
+                    <th style="width: 20%;">제목</th>
+                    <th style="width: 20%;">내용</th>
+                    <th style="width: 20%;">첨부파일</th>
                 </tr>
             </thead>
             <tbody>
+                {% for request in request_history%}
                 <tr>
-                    <td>2025-03-10</td>
-                    <td>CNN 모델 성능 개선 요청</td>
-                    <td><span class="status-bad">처리중</span></td>
+                    <td>{{request.created_at}}</td>
+                    <td>
+                        {% if request.categoryIdx == 1 %}
+                            CNN모델 성능 점검
+                        {% elif request.categoryIdx == 2 %}
+                            ESP32 성능 점검
+                        {% elif request.categoryIdx == 3 %}
+                            사이트 점검
+                        {% elif request.categoryIdx == 4%}
+                            기타 문의
+                        {% endif %}
+                    </td>
+                    <td class="truncate">{{request.applyTitle}}</td>
+                    <td class="truncate">{{ request.applyContent }}</td>
+                    <td>
+                        {% if request.applyFileName %}
+                            <a href="{{ url_for('download_file', filename=request.applyFileName) }}">{{request.applyFileName}}</a>
+                        {% else %}
+                            없음
+                        {% endif %}
+                    </td>
                 </tr>
-                <tr>
-                    <td>2025-03-05</td>
-                    <td>ESP32 펌웨어 업데이트</td>
-                    <td><span class="status-good">완료</span></td>
-                </tr>
+                {% endfor %}
             </tbody>
         </table>
     </div>
