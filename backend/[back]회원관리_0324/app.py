@@ -30,8 +30,12 @@ ph = PasswordHasher()
 
 # 관리자페이지 대시보드 - 메인화면 
 @app.route('/')
-def index():
-    return render_template('index.html')
+def dashboard():
+    if 'userid' not in session:
+        return redirect(url_for('login'))
+    
+    return render_template('dashboard.html')
+
 
 # 로그인 
 @app.route('/login', methods=['GET', 'POST'])
