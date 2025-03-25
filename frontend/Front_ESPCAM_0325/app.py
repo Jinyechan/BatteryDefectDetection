@@ -85,7 +85,7 @@ def capture_frames():
                     print(f"Failed to save frame: {frame_path}")
 
         cap.release()
-        time.sleep(1)  # 1초마다 프레임 캡처
+        time.sleep(2)  # 2초마다 프레임 캡처 (네트워크 부하 감소)
 
 # 프레임 캡처 스레드 시작
 threading.Thread(target=capture_frames, daemon=True).start()
