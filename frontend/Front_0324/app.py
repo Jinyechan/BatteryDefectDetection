@@ -10,6 +10,8 @@ import cv2
 # from tensorflow.keras.models import load_model
 from keras.models import load_model
 import os
+from flask import send_from_directory
+import json
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'

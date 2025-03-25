@@ -12,142 +12,42 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet"/>
     <link href="https://ai-public.creatie.ai/gen_page/tailwind-custom.css" rel="stylesheet"/>
     <style>
-    /* ============================== */
-/* 슬라이더 스타일 */
-/* ============================== */
-
-.range-with-value {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 100%;
-    height: 6px;
-    background: #ddd;
-    border-radius: 3px;
-    outline: none;
-    transition: background 0.3s ease-in-out;
+  main.main-content {
+  margin-top: 1rem; /* 헤더와 너무 멀지 않게 조정 */
+  max-width: 1200px;
+  padding: 1.5rem;
+  background: #ffffff;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
-/* 크로스 브라우징 슬라이더 스타일 */
-.range-with-value::-webkit-slider-thumb,
-.range-with-value::-moz-range-thumb {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: currentColor;
-    cursor: pointer;
-    position: relative;
+.slide img {
+  border: 1px solid #e5e7eb;
 }
 
-/* 툴팁 제거 (JS 활용 필요) */
-.range-with-value::-webkit-slider-thumb::after,
-.range-with-value::-moz-range-thumb::after {
-    content: none; /* content 제거 */
+h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1f2937;
 }
 
-/* ============================== */
-/* 차트 헤더 스타일 */
-/* ============================== */
-
-.chart-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 18px;
+h2, h3 {
+  color: #374151;
+  font-weight: 600;
 }
 
-.chart-header h3 {
-    font-size: 18px;
-    font-weight: 600;
-    color: #2c3e50;
-    margin: 0;
+.analysis-result,
+.capa-form,
+.legal-section {
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
 }
 
-.chart-header select {
-    padding: 8px 14px;
-    font-size: 14px;
-    border-radius: 6px;
-    border: 1px solid #ddd;
-    background-color: #f8f9fa;
-    color: #333;
-    transition: border-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+button {
+  font-weight: 500;
 }
-
-.chart-header select:hover {
-    border-color: #3498db;
-    box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
-}
-
-.chart-header select:focus {
-    outline: none;
-    border-color: #3498db;
-    box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
-}
-
-/* ============================== */
-/* 반응형 디자인 */
-/* ============================== */
-
-@media (max-width: 768px) {
-    .chart-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-    }
-    
-    .chart-header select {
-        width: 100%;
-    }
-}
-
-/* ============================== */
-/* 슬라이더 전체 영역 여백 및 크기 설정 */
-.swiper {
-  width: 100%;
-  max-width: 900px;
-  margin: 2rem auto;
-  padding: 1rem;
-}
-
-/* 슬라이드 안 이미지 그리드 */
-.swiper-slide .grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr); /* 3열 */
-  gap: 16px;
-}
-
-/* 이미지 스타일 */
-.swiper-slide img {
-  width: 100%;
-  height: 150px;
-  object-fit: cover;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-  transition: transform 0.3s ease;
-}
-
-.swiper-slide img:hover {
-  transform: scale(1.05);
-}
-
-/* 네비게이션 버튼 스타일 (옵션) */
-.swiper-button-next,
-.swiper-button-prev {
-  color: #333;
-  transition: color 0.3s;
-}
-.swiper-button-next:hover,
-.swiper-button-prev:hover {
-  color: #007bff;
-}
-
-/* 페이지네이션 점 스타일 */
-.swiper-pagination-bullet {
-  background-color: #ccc;
-}
-.swiper-pagination-bullet-active {
-  background-color: #007bff;
-}
-
 
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
@@ -205,27 +105,40 @@
                 </div>
             </div>
         </div>
-        <!--div class="mt-8 border-t pt-6"-->
-            <div class="swiper mySwiper">
-                <div class="swiper-wrapper">
-                  {% for slide in images|batch(9) %}
-                  <div class="swiper-slide">
-                    <div class="grid grid-cols-3 gap-4">
-                      {% for img_url in slide %}
-                      <div>
-                        <img src="{{ img_url }}" class="rounded shadow w-full h-auto"/>
-                      </div>
-                      {% endfor %}
-                    </div>
-                  </div>
-                  {% endfor %}
-                </div>
-              
-                <!-- Optional Swiper navigation -->
-                <div class="swiper-button-next"></div>
-                <div class="swiper-button-prev"></div>
-                <div class="swiper-pagination"></div>
+
+        <div class="slide grid grid-cols-3 gap-4">
+            {% for item in slide %}
+              <div class="relative group p-2 border rounded">
+                <!-- ✅ filename 확인용 출력 -->
+                <p class="text-xs text-gray-600 mb-1">{{ item.filename }}</p>
+          
+                <!-- 원본 이미지 -->
+                <img
+                  src="{{ url_for('static', filename='dataset/img/' ~ item.filename) }}"
+                  alt="{{ item.filename }}"
+                  class="rounded shadow-md hover:opacity-80 transition w-full"
+                  onclick="showDetail({{ item.label|tojson|safe }}, '{{ item.filename }}')"
+                  onload="console.log('✅ 이미지 로드 성공:', this.src)"
+                  onerror="this.style.border='3px solid red'; console.error('❌ 이미지 로드 실패:', this.src)"
+                />
+          
+                <!-- 라벨 이미지 -->
+                <img
+                  src="{{ url_for('static', filename='dataset/label/' ~ item.filename) }}"
+                  alt="불량 라벨"
+                  class="absolute inset-0 opacity-0 group-hover:opacity-100 transition duration-300 pointer-events-none rounded"
+                  onload="console.log('✅ 라벨 이미지 로드 성공:', this.src)"
+                  onerror="this.style.display='none'; console.warn('⚠️ 라벨 이미지 없음:', this.src)"
+                />
               </div>
+            {% endfor %}
+          </div>
+          
+        
+          <div class="buttons">
+            <button onclick="prevSlide()">◀ 이전</button>
+            <button onclick="nextSlide()">다음 ▶</button>
+          </div>
               
                 <!--/div-->
                 <div class="bg-white rounded-lg border shadow-sm p-4">
@@ -314,5 +227,38 @@
       prevEl: ".swiper-button-prev",
     },
   });
+
+  let currentSlide = 0;
+    const sliderWrapper = document.getElementById("sliderWrapper");
+    const totalSlides = document.querySelectorAll('.slide').length;
+
+    function updateSlide() {
+      sliderWrapper.style.transform = `translateX(-${600 * currentSlide}px)`;
+    }
+
+    function nextSlide() {
+      if (currentSlide < totalSlides - 1) {
+        currentSlide++;
+        updateSlide();
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 0) {
+        currentSlide--;
+        updateSlide();
+      }
+    }
+
+    function showDetail(data, imgName) {
+  document.getElementById('detailImage').src = "/dataset/img/" + imgName;
+  document.getElementById('detailDate').textContent = data.date || "-";
+  document.getElementById('detailLine').textContent = data.line || "-";
+  document.getElementById('detailScore').textContent = data.score || "-";
+  document.getElementById('detailLevel').textContent = data.level || "-";
+  document.getElementById('detailAction').textContent = data.action || "-";
+  document.getElementById('detailPanel').style.display = 'grid';
+}
+
 </script>
 {% endblock %}
