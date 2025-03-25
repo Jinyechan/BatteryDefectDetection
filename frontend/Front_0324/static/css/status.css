@@ -1,7 +1,7 @@
 /* 메인 콘텐츠 */
         .main-content {
             margin-left: 240px;
-            margin-top: 60px;
+            margin-top: 70px;
             padding: 30px;
             min-height: calc(100vh - 60px);
             overflow-x: hidden;

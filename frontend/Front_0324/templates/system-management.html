@@ -26,20 +26,25 @@
     <div id="request" class="tab-content">
         <div class="form-section">
             <h2>점검 분야</h2>
-            <div class="form-grid">
-                <div class="radio-item">
-                    <input type="radio" id="check1" name="checkType" value="CNN모델 성능 점검">
-                    <label for="check1">CNN모델 성능 점검</label>
-                </div>
-                <div class="radio-item">
-                    <input type="radio" id="check2" name="checkType" value="ESP32 성능 점검">
-                    <label for="check2">ESP32 성능 점검</label>
-                </div>
-                <div class="radio-item">
-                    <input type="radio" id="check4" name="checkType" value="기타 문의">
-                    <label for="check4">기타 문의</label>
-                </div>
+        <div class="form-grid">
+            <div class="radio-item">
+                <input type="radio" id="check1" name="categoryIdx" value="1">
+                <label for="check1">CNN모델 성능 점검</label>
             </div>
+            <div class="radio-item">
+                <input type="radio" id="check2" name="categoryIdx" value="2">
+                <label for="check2">ESP32 성능 점검</label>
+            </div>
+            <div class="radio-item">
+                <input type="radio" id="check3" name="categoryIdx" value="3">
+                <label for="check3">사이트 점검</label>
+            </div>
+            <div class="radio-item">
+                <input type="radio" id="check4" name="categoryIdx" value="4">
+                <label for="check4">기타 문의</label>
+            </div>
+        </div>
+
 
             <h2>요청 정보</h2>
             <div class="form-group">
