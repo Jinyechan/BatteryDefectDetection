@@ -13,40 +13,106 @@
     <script src="https://cdn.tailwindcss.com/3.4.5?plugins=forms@0.5.7,typography@0.5.13,aspect-ratio@0.4.2,container-queries@0.1.1"></script>
     <script src="https://ai-public.creatie.ai/gen_page/tailwind-config.min.js" data-color="#000000" data-border-radius="small"></script>
     <style>
-        /* 차트 헤더 스타일 개선 */
-        .chart-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
+        /* 페이지 기본 레이아웃 */
+main.main-content {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
 
-        .chart-header h3 {
-            font-size: 18px;
-            font-weight: 600;
-            color: #2c3e50;
-        }
+/* 박스 공통 스타일 */
+.box-container {
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  padding: 1.5rem;
+}
 
-        .chart-header select {
-            padding: 12px 30px;
-            font-size: 14px;
-            border-radius: 6px;
-            border: 1px solid #ddd;
-            background-color: #f8f9fa;
-            color: #333;
-            transition: border-color 0.3s ease, box-shadow 0.3s ease;
-        }
+/* 섹션 제목 */
+.section-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1f2937;
+}
 
-        .chart-header select:hover {
-            border-color: #3498db;
-            box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
-        }
+/* 셀렉트 박스 */
+.select-box {
+  padding: 0.5rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  background-color: #f9fafb;
+  font-size: 0.875rem;
+  color: #111827;
+  transition: all 0.2s ease;
+}
+.select-box:hover {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 3px rgba(96,165,250,0.3);
+}
 
-        .chart-header select:focus {
-            outline: none;
-            border-color: #3498db;
-            box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
-        }
+/* 차트 영역 높이 */
+.chart-area {
+  height: 400px;
+}
+
+/* 테이블 */
+.analysis-table {
+  width: 100%;
+  font-size: 0.875rem;
+  border-collapse: collapse;
+}
+.analysis-table th {
+  background-color: #f9fafb;
+  color: #6b7280;
+  font-weight: 500;
+  text-align: left;
+  padding: 0.75rem 1rem;
+}
+.analysis-table td {
+  padding: 0.75rem 1rem;
+  color: #374151;
+}
+.analysis-table tr:hover {
+  background-color: #f3f4f6;
+}
+.analysis-table td span {
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+/* 상태 뱃지 */
+.badge-red {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+.badge-yellow {
+  background-color: #fef9c3;
+  color: #92400e;
+}
+
+/* 페이지네이션 */
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 2rem;
+}
+.pagination button {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  background-color: white;
+}
+.pagination button.active {
+  background-color: #2563eb;
+  color: white;
+  border-color: #2563eb;
+}
+
     </style>
 </head>
 
@@ -182,44 +248,40 @@
 
 
 <script>
-    const lineChart = echarts.init(document.getElementById('lineChart'));
-    lineChart.setOption({
-        tooltip: { trigger: 'axis' },
-        legend: { data: ['불량률'] },
-        xAxis: { type: 'category', data: ['라인 A', '라인 B', '라인 C'] },
-        yAxis: { type: 'value', axisLabel: { formatter: '{value}%' } },
-        series: [{
-            name: '불량률',
-            type: 'bar',
-            data: [2.5, 1.9, 2.2],
-            itemStyle: { color: '#e74c3c', borderRadius: [10, 10, 0, 0] }
-        }]
-    });
+    // 생산라인별 불량률 차트
+const lineChart = echarts.init(document.getElementById('lineChart'));
+lineChart.setOption({
+  tooltip: { trigger: 'axis' },
+  legend: { data: ['불량률'] },
+  xAxis: { type: 'category', data: ['라인 A', '라인 B', '라인 C'] },
+  yAxis: { type: 'value', axisLabel: { formatter: '{value}%' } },
+  series: [{
+    name: '불량률',
+    type: 'bar',
+    data: [2.5, 1.9, 2.2],
+    itemStyle: { color: '#e74c3c', borderRadius: [10, 10, 0, 0] }
+  }]
+});
 
-    const barChart = echarts.init(document.getElementById('barChart'));
-    barChart.setOption({
-        tooltip: { trigger: 'axis' },
-        xAxis: { type: 'category', data: ['2/9', '2/10', '2/11', '2/12', '2/13', '2/14', '2/15'] },
-        yAxis: { type: 'value', axisLabel: { formatter: '{value}%' } },
-        series: [{
-            data: [2.1, 2.4, 1.8, 2.8, 2.3, 2.9, 2.5],
-            type: 'bar',
-            barWidth: '40%',
-            itemStyle: { color: '#3498db', borderRadius: [10, 10, 0, 0] }
-        }]
-    });
+// 불량률 추이 차트
+const barChart = echarts.init(document.getElementById('barChart'));
+barChart.setOption({
+  tooltip: { trigger: 'axis' },
+  xAxis: { type: 'category', data: ['2/9', '2/10', '2/11', '2/12', '2/13', '2/14', '2/15'] },
+  yAxis: { type: 'value', axisLabel: { formatter: '{value}%' } },
+  series: [{
+    data: [2.1, 2.4, 1.8, 2.8, 2.3, 2.9, 2.5],
+    type: 'bar',
+    barWidth: '40%',
+    itemStyle: { color: '#3498db', borderRadius: [10, 10, 0, 0] }
+  }]
+});
 
-    window.addEventListener('resize', function() {
-        lineChart.resize();
-        barChart.resize();
-    });
+// 창 크기 조절 시 차트 리사이즈
+window.addEventListener('resize', () => {
+  lineChart.resize();
+  barChart.resize();
+});
 
-    function openNotificationModal() {
-        document.getElementById('notificationModal').classList.remove('hidden');
-    }
-
-    function closeNotificationModal() {
-        document.getElementById('notificationModal').classList.add('hidden');
-    }
 </script>
 {% endblock %}
