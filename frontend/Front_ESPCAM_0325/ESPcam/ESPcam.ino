@@ -121,21 +121,34 @@ void loop() {
 
     if (WiFi.status() == WL_CONNECTED) {
       HTTPClient http;
-      http.begin(serverName);
-      http.addHeader("Content-Type", "application/json");
+      int max_retries = 3;
+      int retry_count = 0;
+      int httpResponseCode = -1;
 
-      String jsonData = "{\"image\": \"" + encodedImage + "\"}";
-      Serial.println("HTTP POST 요청 전송 중...");
+      while (retry_count < max_retries) {
+        http.begin(serverName);
+        http.addHeader("Content-Type", "application/json");
 
-      int httpResponseCode = http.POST(jsonData);
-      if (httpResponseCode > 0) {
-        String response = http.getString();
-        Serial.printf("HTTP 응답 코드: %d\n", httpResponseCode);
-        Serial.println("서버 응답: " + response);
-      } else {
-        Serial.printf("HTTP 요청 실패, 오류: %s\n", http.errorToString(httpResponseCode).c_str());
+        String jsonData = "{\"image\": \"" + encodedImage + "\"}";
+        Serial.println("HTTP POST 요청 전송 중...");
+
+        httpResponseCode = http.POST(jsonData);
+        if (httpResponseCode > 0) {
+          String response = http.getString();
+          Serial.printf("HTTP 응답 코드: %d\n", httpResponseCode);
+          Serial.println("서버 응답: " + response);
+          break;
+        } else {
+          Serial.printf("HTTP 요청 실패, 오류: %s\n", http.errorToString(httpResponseCode).c_str());
+          retry_count++;
+          delay(1000); // 1초 대기 후 재시도
+        }
+        http.end();
       }
-      http.end();
+
+      if (retry_count >= max_retries) {
+        Serial.println("최대 재시도 횟수 초과, 요청 실패");
+      }
     } else {
       Serial.println("WiFi 연결 끊김");
     }
@@ -167,7 +180,7 @@ bool initCamera() {
   config.xclk_freq_hz = 20000000;
   config.pixel_format = PIXFORMAT_JPEG;
   config.frame_size = FRAMESIZE_VGA; // 640x480
-  config.jpeg_quality = 10; // 품질 낮춤 (네트워크 부하 감소)
+  config.jpeg_quality = 20; // 품질 더 낮춤 (네트워크 부하 감소)
   config.fb_count = 2; // 버퍼 2개로 안정성 향상
 
   esp_err_t err = esp_camera_init(&config);

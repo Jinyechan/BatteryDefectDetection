@@ -30,12 +30,12 @@ mysql = MySQL(app)
 # YOLO 모델 로드
 model_yolo = YOLO('best.pt')
 
-# CNN 및 U-Net 모델 로드
+# CNN 및 U-Net 모델 로드 (현재 사용하지 않음)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH_MAIN = os.path.join(BASE_DIR, "static", "fine_tuned_unet_mobilenet_alpha08.h5")
 MODEL_PATH_SECONDARY = os.path.join(BASE_DIR, "static", "model_final.h5")
-model_main = load_model(MODEL_PATH_MAIN, compile=False)  # U-Net
-model_secondary = load_model(MODEL_PATH_SECONDARY, compile=False)  # CNN
+# model_main = load_model(MODEL_PATH_MAIN, compile=False)  # U-Net
+# model_secondary = load_model(MODEL_PATH_SECONDARY, compile=False)  # CNN
 
 # 이미지 저장 디렉토리 설정
 IMAGE_SAVE_PATH = 'static/images/'
@@ -82,17 +82,7 @@ def latest_image():
         print("최신 이미지 가져오기 에러:", str(e))
         return jsonify({"error": str(e)}), 500
 
-# CNN 모델로 불량 vs 양품 판정
-def predict_with_cnn(image):
-    img = cv2.imdecode(np.frombuffer(image.read(), np.uint8), cv2.IMREAD_COLOR)
-    img_resized = cv2.resize(img, (128, 128), interpolation=cv2.INTER_LINEAR).astype(np.float32) / 255.0
-    pred = model_secondary.predict(np.expand_dims(img_resized, axis=0))[0]
-    is_defective = bool(pred[0] > 0.01)  # 임계값을 0.1에서 0.01로 낮춤
-    defect_prob = float(pred[0] * 100)
-    print(f"CNN 출력 - is_defective: {is_defective}, defect_prob: {defect_prob}")
-    return is_defective, defect_prob
-
-# 간단한 이미지 처리로 불량 검출 (녹색/적색 영역 감지)
+# 간단한 이미지 처리로 불량 검출 (녹색/적색/갈색 영역 감지)
 def detect_defect_by_color(image):
     img = cv2.imdecode(np.frombuffer(image.read(), np.uint8), cv2.IMREAD_COLOR)
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
@@ -106,41 +96,32 @@ def detect_defect_by_color(image):
     upper_red2 = np.array([180, 255, 255])
     mask2 = cv2.inRange(hsv, lower_red2, upper_red2)
     
-    mask = mask1 + mask2
+    # 갈색(녹) 영역 감지
+    lower_brown = np.array([10, 100, 20])
+    upper_brown = np.array([20, 255, 200])
+    mask3 = cv2.inRange(hsv, lower_brown, upper_brown)
+    
+    mask = mask1 + mask2 + mask3
     defect_ratio = np.sum(mask) / (img.shape[0] * img.shape[1])
-    is_defective = defect_ratio > 0.05  # 5% 이상 녹색/적색 영역이 있으면 불량
+    is_defective = defect_ratio > 0.01  # 임계값을 0.02에서 0.01로 낮춤
     defect_prob = defect_ratio * 100
     print(f"색상 기반 불량 검출 - is_defective: {is_defective}, defect_prob: {defect_prob}")
-    return is_defective, defect_prob
+    return is_defective, defect_prob, mask
 
-# U-Net 모델로 결함 위치 시각화
-def predict_with_unet(image):
+# 불량 위치 시각화 (색상 기반)
+def visualize_defect(image, mask):
     img = cv2.imdecode(np.frombuffer(image.read(), np.uint8), cv2.IMREAD_COLOR)
-    if img is None:
-        print("U-Net: Failed to decode image")
-        return 0.0, "", img
-
-    original_size = img.shape[:2]
-    img_resized = cv2.resize(img, (224, 224), interpolation=cv2.INTER_LINEAR).astype(np.float32) / 255.0
-    pred_mask = model_main.predict(np.expand_dims(img_resized, axis=0))[0]
-    pred_mask = (pred_mask > 0.51).astype(np.uint8)
-
-    defect_ratio = np.sum(pred_mask) / (224 * 224)
-    defect_score = min(defect_ratio * 500, 100)  # 스케일링 조정
-    print(f"U-Net 출력 - defect_ratio: {defect_ratio}, defect_score: {defect_score}")
-
-    pred_mask_resized = cv2.resize(pred_mask[:, :, 0], (original_size[1], original_size[0]), interpolation=cv2.INTER_NEAREST)
     overlay = img.copy()
-    overlay[pred_mask_resized == 1] = [0, 0, 255]  # 불량 부분을 빨간색으로 오버레이
+    overlay[mask > 0] = [0, 0, 255]  # 불량 부분을 빨간색으로 오버레이
 
     pil_img = Image.fromarray(cv2.cvtColor(overlay, cv2.COLOR_BGR2RGB))
     buf = BytesIO()
     pil_img.save(buf, format='JPEG')
     base64_str = base64.b64encode(buf.getvalue()).decode('utf-8')
 
-    return defect_score, base64_str, overlay
+    return base64_str, overlay
 
-# 이미지 처리 함수 (YOLO → CNN → U-Net)
+# 이미지 처리 함수 (YOLO → 색상 기반 불량 검출)
 def process_image(image_data):
     try:
         image_data = base64.b64decode(image_data)
@@ -175,6 +156,14 @@ def process_image(image_data):
     base64_str = ""
 
     if detected and confidence > 0.5:
+        # 바운딩 박스 확장
+        width = x2 - x1
+        height = y2 - y1
+        x1 = max(0, x1 - int(width * 0.25))
+        y1 = max(0, y1 - int(height * 0.25))
+        x2 = min(image_cv.shape[1], x2 + int(width * 0.25))
+        y2 = min(image_cv.shape[0], y2 + int(height * 0.25))
+
         cv2.rectangle(image_cv, (x1, y1), (x2, y2), (0, 255, 0), 2)
         label = f"Battery: {confidence:.2f}"
         cv2.putText(image_cv, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
@@ -182,22 +171,40 @@ def process_image(image_data):
         _, buffer = cv2.imencode('.jpg', image_cv[y1:y2, x1:x2])
         img_io = BytesIO(buffer)
         
-        # CNN으로 불량 검출
-        is_defective_cnn, defect_prob_cnn = predict_with_cnn(img_io)
-        
-        # 색상 기반 불량 검출
-        img_io.seek(0)
-        is_defective_color, defect_prob_color = detect_defect_by_color(img_io)
-        
-        # CNN과 색상 기반 결과를 조합
-        is_defective = is_defective_cnn or is_defective_color
-        defect_prob = max(defect_prob_cnn, defect_prob_color)
+        # 다중 스케일 분석
+        scales = [1.0, 1.5, 2.0]
+        is_defective_list = []
+        defect_prob_list = []
+        masks = []
+
+        for scale in scales:
+            scaled_x1 = max(0, x1 - int(width * (scale - 1) / 2))
+            scaled_y1 = max(0, y1 - int(height * (scale - 1) / 2))
+            scaled_x2 = min(image_cv.shape[1], x2 + int(width * (scale - 1) / 2))
+            scaled_y2 = min(image_cv.shape[0], y2 + int(height * (scale - 1) / 2))
+
+            _, scaled_buffer = cv2.imencode('.jpg', image_cv[scaled_y1:scaled_y2, scaled_x1:scaled_x2])
+            scaled_img_io = BytesIO(scaled_buffer)
+
+            # 색상 기반 불량 검출
+            scaled_img_io.seek(0)
+            is_defective_color, defect_prob_color, mask = detect_defect_by_color(scaled_img_io)
+
+            is_defective_list.append(is_defective_color)
+            defect_prob_list.append(defect_prob_color)
+            masks.append(mask)
+
+        # 결과 조합
+        is_defective = any(is_defective_list)
+        defect_prob = max(defect_prob_list)
+        best_mask = masks[defect_prob_list.index(defect_prob)]
 
         if is_defective:
+            defect_score = defect_prob  # 색상 기반 점수 사용
             img_io.seek(0)
-            defect_score, base64_str, overlay = predict_with_unet(img_io)
+            base64_str, overlay = visualize_defect(img_io, best_mask)
 
-    faulty_score = int((defect_prob * 0.3 + defect_score * 0.7) if is_defective else defect_prob)
+    faulty_score = int(defect_prob) if is_defective else 0
     print(f"통합 점수 - faulty_score: {faulty_score}")
 
     return {
@@ -266,7 +273,7 @@ def capture():
 
         cap.release()
 
-        # JSON 응답으로 불량 여부와 U-Net 시각화 데이터 포함
+        # JSON 응답으로 불량 여부와 시각화 데이터 포함
         _, buffer = cv2.imencode('.jpg', result["image"])
         image_base64 = base64.b64encode(buffer).decode('utf-8')
         response_data = {
@@ -277,15 +284,16 @@ def capture():
             "defect_score": result["defect_score"],
             "faulty_score": result["faulty_score"],
             "image_base64": image_base64,
-            "unet_visualization": result["base64_str"] if result["is_defective"] else ""
+            "base64_str": result["base64_str"] if result["is_defective"] else "",
+            "line_id": 1,
+            "log_date": datetime.now().strftime('%Y.%m.%d %H:%M:%S'),
+            "image_path": image_filename
         }
         return jsonify(response_data), 200
 
     except Exception as e:
         print("Capture error:", str(e))
         return jsonify({"error": str(e)}), 500
-
-
 
 # ESP32-CAM에서 이미지 수신 및 처리
 @app.route('/detect', methods=['POST'])
