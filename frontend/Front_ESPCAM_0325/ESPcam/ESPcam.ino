@@ -1,12 +1,17 @@
 #include <WiFi.h>
 #include "esp_camera.h"
 #include <WebServer.h>
+#include <HTTPClient.h>
+#include <base64.h>
 
+// WiFi 및 서버 설정 (당신의 정보 사용)
 const char* ssid = "class606_2.4G";
 const char* password = "sejong123";
+const char* serverName = "http://10.0.66.97:5000/detect"; // Flask 서버 주소
 
 WebServer server(81);
 
+// 카메라 핀 설정
 #define PWDN_GPIO_NUM     32
 #define RESET_GPIO_NUM    -1
 #define XCLK_GPIO_NUM      0
@@ -24,13 +29,135 @@ WebServer server(81);
 #define HREF_GPIO_NUM     23
 #define PCLK_GPIO_NUM     22
 
+// 함수 선언
 void startCameraServer();
+bool initCamera();
+void handleStream();
+
+// 캡처 간격 설정
+unsigned long lastCaptureTime = 0;
+const unsigned long captureInterval = 1000; // 1초 간격
 
 void setup() {
   Serial.begin(115200);
   Serial.setDebugOutput(true); // 디버깅 출력 활성화
 
   // 카메라 초기화
+  if (!initCamera()) {
+    Serial.println("Camera initialization failed. Restarting...");
+    delay(5000);
+    ESP.restart();
+    return;
+  }
+  Serial.println("Camera initialized successfully");
+
+  // WiFi 설정 (정적 IP 사용)
+  IPAddress local_IP(10, 0, 66, 13);  // ESP32-CAM IP
+  IPAddress gateway(10, 0, 66, 1);    // 게이트웨이 (라우터 IP)
+  IPAddress subnet(255, 255, 255, 0); // 서브넷 마스크
+  WiFi.config(local_IP, gateway, subnet);
+
+  // WiFi 연결
+  WiFi.begin(ssid, password);
+  int retryCount = 0;
+  while (WiFi.status() != WL_CONNECTED && retryCount < 20) {
+    delay(500);
+    Serial.print(".");
+    retryCount++;
+  }
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("Failed to connect to WiFi after 20 attempts");
+    delay(5000);
+    ESP.restart();
+    return;
+  }
+  Serial.println("WiFi connected");
+  Serial.println(WiFi.localIP());
+  Serial.printf("WiFi signal strength (RSSI): %d dBm\n", WiFi.RSSI());
+
+  // 서버 시작
+  startCameraServer();
+  server.begin();
+  Serial.println("Server started on port 81");
+}
+
+void loop() {
+  server.handleClient();
+
+  // WiFi 연결 상태 확인 및 재연결
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("WiFi disconnected, reconnecting...");
+    WiFi.reconnect();
+    int retryCount = 0;
+    while (WiFi.status() != WL_CONNECTED && retryCount < 10) {
+      delay(500);
+      Serial.print(".");
+      retryCount++;
+    }
+    if (WiFi.status() == WL_CONNECTED) {
+      Serial.println("WiFi reconnected");
+      Serial.println(WiFi.localIP());
+      Serial.printf("WiFi signal strength (RSSI): %d dBm\n", WiFi.RSSI());
+    } else {
+      Serial.println("WiFi reconnection failed");
+      ESP.restart();
+    }
+  }
+
+  // 1초 간격으로 이미지 캡처 및 전송
+  unsigned long currentTime = millis();
+  if (currentTime - lastCaptureTime >= captureInterval) {
+    camera_fb_t *fb = esp_camera_fb_get();
+    if (!fb) {
+      Serial.println("이미지 캡처 실패 - Frame buffer null");
+      return;
+    }
+
+    Serial.printf("이미지 크기: %u 바이트\n", fb->len);
+    String encodedImage = base64::encode(fb->buf, fb->len);
+    Serial.println("Base64 인코딩 완료");
+
+    esp_camera_fb_return(fb);
+
+    if (WiFi.status() == WL_CONNECTED) {
+      HTTPClient http;
+      int max_retries = 3;
+      int retry_count = 0;
+      int httpResponseCode = -1;
+
+      while (retry_count < max_retries) {
+        http.begin(serverName);
+        http.addHeader("Content-Type", "application/json");
+
+        String jsonData = "{\"image\": \"" + encodedImage + "\"}";
+        Serial.println("HTTP POST 요청 전송 중...");
+
+        httpResponseCode = http.POST(jsonData);
+        if (httpResponseCode > 0) {
+          String response = http.getString();
+          Serial.printf("HTTP 응답 코드: %d\n", httpResponseCode);
+          Serial.println("서버 응답: " + response);
+          break;
+        } else {
+          Serial.printf("HTTP 요청 실패, 오류: %s\n", http.errorToString(httpResponseCode).c_str());
+          retry_count++;
+          delay(1000); // 1초 대기 후 재시도
+        }
+        http.end();
+      }
+
+      if (retry_count >= max_retries) {
+        Serial.println("최대 재시도 횟수 초과, 요청 실패");
+      }
+    } else {
+      Serial.println("WiFi 연결 끊김");
+    }
+
+    lastCaptureTime = currentTime;
+  }
+}
+
+bool initCamera() {
   camera_config_t config;
   config.ledc_channel = LEDC_CHANNEL_0;
   config.ledc_timer = LEDC_TIMER_0;
@@ -52,107 +179,93 @@ void setup() {
   config.pin_reset = RESET_GPIO_NUM;
   config.xclk_freq_hz = 20000000;
   config.pixel_format = PIXFORMAT_JPEG;
-  config.frame_size = FRAMESIZE_QVGA; // 320x240 (224x224로 리사이징은 Flask에서 처리)
-  config.jpeg_quality = 30; // 품질 낮춤 (네트워크 부하 감소)
-  config.fb_count = 1;
+  config.frame_size = FRAMESIZE_VGA; // 640x480
+  config.jpeg_quality = 20; // 품질 더 낮춤 (네트워크 부하 감소)
+  config.fb_count = 2; // 버퍼 2개로 안정성 향상
 
-  // 카메라 초기화
   esp_err_t err = esp_camera_init(&config);
   if (err != ESP_OK) {
-    Serial.printf("Camera init failed with error 0x%x", err);
-    delay(5000);
-    ESP.restart(); // 초기화 실패 시 재부팅
-    return;
+    Serial.printf("Camera init failed with error 0x%x\n", err);
+    return false;
   }
-  Serial.println("Camera initialized successfully");
-
-  // WiFi 연결
-  WiFi.begin(ssid, password);
-  int retryCount = 0;
-  while (WiFi.status() != WL_CONNECTED && retryCount < 20) {
-    delay(500);
-    Serial.print(".");
-    retryCount++;
-  }
-  if (WiFi.status() != WL_CONNECTED) {
-    Serial.println("Failed to connect to WiFi after 20 attempts");
-    delay(5000);
-    ESP.restart();
-    return;
-  }
-  Serial.println("WiFi connected");
-  Serial.println(WiFi.localIP());
-  Serial.printf("WiFi signal strength (RSSI): %d dBm\n", WiFi.RSSI());
-
-  startCameraServer();
-  server.begin();
-  Serial.println("Server started on port 81");
-}
-
-void loop() {
-  server.handleClient();
-
-  // WiFi 연결 상태 확인 및 재연결
-  if (WiFi.status() != WL_CONNECTED) {
-    Serial.println("WiFi disconnected, reconnecting...");
-    WiFi.reconnect();
-    int retryCount = 0;
-    while (WiFi.status() != WL_CONNECTED && retryCount < 20) {
-      delay(500);
-      Serial.print(".");
-      retryCount++;
-    }
-    if (WiFi.status() != WL_CONNECTED) {
-      Serial.println("Failed to reconnect to WiFi after 20 attempts");
-      delay(5000);
-      ESP.restart();
-    }
-    Serial.println("WiFi reconnected");
-    Serial.println(WiFi.localIP());
-    Serial.printf("WiFi signal strength (RSSI): %d dBm\n", WiFi.RSSI());
-  }
+  return true;
 }
 
 void startCameraServer() {
-  server.on("/stream", HTTP_GET, []() {
+  server.on("/capture", HTTP_GET, []() {
     WiFiClient client = server.client();
     if (!client) {
       Serial.println("Client disconnected");
       return;
     }
 
-    // MJPEG 스트림 헤더 전송
-    client.println("HTTP/1.1 200 OK");
-    client.println("Content-Type: multipart/x-mixed-replace; boundary=--frame");
-    client.println();
-    Serial.println("Client connected, starting stream");
-
-    while (client.connected()) {
-      camera_fb_t * fb = esp_camera_fb_get();
-      if (!fb) {
-        Serial.println("Camera capture failed");
-        delay(1000);
-        continue; // 프레임 캡처 실패 시 재시도
-      }
-
-      // MJPEG 스트림 형식으로 프레임 전송
-      client.print("--frame\r\n");
-      client.print("Content-Type: image/jpeg\r\n");
-      client.printf("Content-Length: %u\r\n", fb->len);
-      client.print("\r\n");
-      client.write(fb->buf, fb->len);
-      client.print("\r\n");
-      Serial.printf("Frame sent, size: %u bytes\n", fb->len);
-
-      esp_camera_fb_return(fb);
-      delay(1000); // 프레임 간격 조정 (1초)
+    camera_fb_t *fb = esp_camera_fb_get();
+    if (!fb) {
+      Serial.println("Camera capture failed in /capture");
+      client.println("HTTP/1.1 500 Internal Server Error");
+      client.println("Content-Type: text/plain");
+      client.println();
+      client.println("Camera capture failed");
+      client.stop();
+      return;
     }
 
+    client.println("HTTP/1.1 200 OK");
+    client.println("Content-Type: image/jpeg");
+    client.printf("Content-Length: %u\r\n", fb->len);
+    client.println();
+    client.write(fb->buf, fb->len);
+    Serial.printf("Image sent, size: %u bytes\n", fb->len);
+
+    esp_camera_fb_return(fb);
     client.stop();
-    Serial.println("Client disconnected");
   });
+
+  server.on("/stream", HTTP_GET, handleStream); // 스트리밍 엔드포인트 추가
 
   server.onNotFound([]() {
     server.send(404, "text/plain", "Not found");
   });
+}
+
+void handleStream() {
+  WiFiClient client = server.client();
+  if (!client) {
+    Serial.println("Client disconnected");
+    return;
+  }
+
+  client.println("HTTP/1.1 200 OK");
+  client.println("Content-Type: multipart/x-mixed-replace; boundary=frame");
+  client.println();
+
+  while (true) {
+    if (!client.connected()) {
+      Serial.println("Stream client disconnected");
+      break;
+    }
+
+    camera_fb_t *fb = esp_camera_fb_get();
+    if (!fb) {
+      Serial.println("Stream capture failed");
+      break;
+    }
+
+    client.print("--frame\r\n");
+    client.print("Content-Type: image/jpeg\r\n");
+    client.printf("Content-Length: %u\r\n", fb->len);
+    client.println();
+    size_t sent = client.write(fb->buf, fb->len);
+    client.println();
+
+    if (sent != fb->len) {
+      Serial.println("Failed to send full frame");
+      esp_camera_fb_return(fb);
+      break;
+    }
+
+    esp_camera_fb_return(fb);
+    delay(50); // 스트리밍 속도 조절 (네트워크 부하 감소)
+  }
+  client.stop();
 }

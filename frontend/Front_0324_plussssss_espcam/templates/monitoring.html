@@ -1,0 +1,496 @@
+{% extends "base.html" %}
+
+{% block title %}실시간 모니터링{% endblock %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/monitoring.css') }}">
+<script src="{{ url_for('static', filename='js/monitoring.js') }}" defer></script>
+
+{% block content %}
+<style>
+/* 기본 설정 */
+body {
+    margin: 0;
+    padding: 0;
+}
+
+.monitoring-container {
+    width: 100%;     
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    padding: 25px;
+}
+
+.monitoring-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.monitoring-title {
+    font-size: 24px;
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.current-datetime {
+    font-size: 18px;
+    color: #495057;
+    font-weight: 700;
+}
+
+.camera-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 25px;
+    margin-bottom: 30px;
+}
+
+.camera-feed {
+    position: relative;
+    background: #000;
+    border-radius: 12px;
+    overflow: hidden;
+    aspect-ratio: 16/9;
+    width: 100%;
+    height: 100%;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.camera-feed img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.camera-info {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: rgba(0, 0, 0, 0.75);
+    padding: 10px 15px;
+    border-radius: 8px;
+    color: white;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    backdrop-filter: blur(4px);
+}
+
+.camera-status {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #2ecc71;
+    box-shadow: 0 0 10px rgba(46, 204, 113, 0.5);
+}
+
+.camera-status.offline {
+    background: #e74c3c;
+    box-shadow: 0 0 10px rgba(231, 76, 60, 0.5);
+}
+
+.camera-controls {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    gap: 12px;
+}
+
+.camera-control-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.75);
+    border: none;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease-in-out;
+    backdrop-filter: blur(4px);
+    font-size: 16px;
+}
+
+.camera-control-btn:hover {
+    background: rgba(0, 0, 0, 0.9);
+    transform: scale(1.1);
+}
+
+.alert-panel {
+    background: #fff;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+}
+
+.alert-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 0 5px;
+}
+
+.alert-header h3 {
+    font-size: 18px;
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.alert-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.alert-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.alert-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.alert-list::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 4px;
+}
+
+.alert-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    border-bottom: 1px solid #edf2f7;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.alert-item:hover {
+    background: #f8f9fa;
+}
+
+.alert-item:last-child {
+    border-bottom: none;
+}
+
+.alert-type {
+    color: #e74c3c;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.alert-time {
+    color: #718096;
+    font-size: 13px;
+}
+
+.alert-image {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 4px;
+    margin-left: 10px;
+}
+
+/* 불량 상태 표시 스타일 추가 */
+.defect-status {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.defect-status.normal {
+    color: #2ecc71;
+}
+
+.defect-status.defective {
+    color: #e74c3c;
+}
+
+@media (max-width: 768px) {
+    .monitoring-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .camera-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .alert-panel {
+        width: 100%;
+    }
+}
+</style>
+
+<div class="monitoring-container">
+    <div class="monitoring-header">
+        <h2 class="monitoring-title">실시간 라인별 생산화면</h2>
+        <div class="current-datetime" id="currentDateTime"></div>
+    </div>
+
+    <!-- 카메라 피드 (4개 화면으로 배치, 라인 A만 표시) -->
+    <div class="camera-grid">
+        <div class="camera-feed">
+            <img id="camera1" src="" alt="Camera 1">
+            <div class="camera-info">
+                <span class="camera-status"></span>
+                라인 A - 메인
+            </div>
+            <div class="defect-status" id="defectStatus1"></div>
+            <div class="camera-controls">
+                <button class="camera-control-btn" title="전체화면">⛶</button>
+                <button class="camera-control-btn" title="캡처">📸</button>
+                <button class="camera-control-btn" title="설정">⚙️</button>
+            </div>
+        </div>
+        <div class="camera-feed">
+            <img id="camera2" src="" alt="Camera 2">
+            <div class="camera-info">
+                <span class="camera-status"></span>
+                라인 B
+            </div>
+            <div class="defect-status" id="defectStatus2"></div>
+            <div class="camera-controls">
+                <button class="camera-control-btn" title="전체화면">⛶</button>
+                <button class="camera-control-btn" title="캡처">📸</button>
+                <button class="camera-control-btn" title="설정">⚙️</button>
+            </div>
+        </div>
+        <div class="camera-feed">
+            <img id="camera3" src="" alt="Camera 3">
+            <div class="camera-info">
+                <span class="camera-status"></span>
+                라인 C
+            </div>
+            <div class="defect-status" id="defectStatus3"></div>
+            <div class="camera-controls">
+                <button class="camera-control-btn" title="전체화면">⛶</button>
+                <button class="camera-control-btn" title="캡처">📸</button>
+                <button class="camera-control-btn" title="설정">⚙️</button>
+            </div>
+        </div>
+        <div class="camera-feed">
+            <img id="camera4" src="" alt="Camera 4">
+            <div class="camera-info">
+                <span class="camera-status"></span>
+                라인 D
+            </div>
+            <div class="defect-status" id="defectStatus4"></div>
+            <div class="camera-controls">
+                <button class="camera-control-btn" title="전체화면">⛶</button>
+                <button class="camera-control-btn" title="캡처">📸</button>
+                <button class="camera-control-btn" title="설정">⚙️</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 알림 패널 -->
+    <div class="alert-panel">
+        <div class="alert-header">
+            <h3>최근 감지된 불량 로그</h3>
+        </div>
+        <div class="alert-list" id="alertList">
+            <!-- 동적으로 알림 추가 -->
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 날짜/시간 업데이트 함수
+    function updateDateTime() {
+        const now = new Date();
+        const days = ['일', '월', '화', '수', '목', '금', '토'];
+        const dayOfWeek = days[now.getDay()];
+        
+        let hours = now.getHours();
+        const ampm = hours >= 12 ? '오후' : '오전';
+        hours = hours % 12;
+        hours = hours ? hours : 12;
+        
+        const dateTimeStr = now.getFullYear() + '. ' + 
+            String(now.getMonth() + 1).padStart(2, '0') + '. ' + 
+            String(now.getDate()).padStart(2, '0') + ' (' + dayOfWeek + ') ' + 
+            ampm + ' ' + 
+            String(hours).padStart(2, '0') + ': ' + 
+            String(now.getMinutes()).padStart(2, '0');
+        
+        document.getElementById('currentDateTime').textContent = dateTimeStr;
+    }
+
+    // 초기 실행 및 1초마다 업데이트
+    updateDateTime();
+    setInterval(updateDateTime, 1000);
+
+    // 로그를 저장할 배열
+    let logHistory = [];
+
+    // 1초마다 이미지 갱신 (라인 A만 갱신)
+    function updateCameraFeeds() {
+        const camera1 = {
+            img: document.getElementById('camera1'),
+            status: document.getElementById('defectStatus1')
+        };
+
+        const url = "{{ url_for('capture') }}?" + new Date().getTime();
+        fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                // 라인 A만 업데이트
+                camera1.img.src = 'data:image/jpeg;base64,' + data.image_base64;
+                if (data.is_defective) {
+                    camera1.status.textContent = '불량 (점수: ' + data.faulty_score + ')';
+                    camera1.status.className = 'defect-status defective';
+                    if (data.base64_str) {
+                        camera1.img.src = 'data:image/jpeg;base64,' + data.base64_str;
+                    }
+                } else {
+                    camera1.status.textContent = '정상';
+                    camera1.status.className = 'defect-status normal';
+                }
+
+                // 로그 업데이트
+                updateLog(data);
+            })
+            .catch(error => {
+                console.error(`Failed to load image for camera1:`, error);
+                camera1.img.src = 'data:image/jpeg;base64,' + btoa(
+                    new Uint8Array(generateFallbackImage()).reduce((data, byte) => data + String.fromCharCode(byte), '')
+                );
+                camera1.status.textContent = '오류';
+                camera1.status.className = 'defect-status';
+            });
+    }
+
+    function generateFallbackImage() {
+        const canvas = document.createElement('canvas');
+        canvas.width = 640;
+        canvas.height = 480;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = 'black';
+        ctx.fillRect(0, 0, 640, 480);
+        ctx.fillStyle = 'white';
+        ctx.font = '30px Arial';
+        ctx.fillText('No Signal', 200, 240);
+        return canvas.toDataURL('image/jpeg').split(',')[1];
+    }
+
+    // 로그 업데이트 함수
+    function updateLog(data) {
+        const alertList = document.getElementById('alertList');
+        
+        // 로그 히스토리에 추가
+        logHistory.push(data);
+        
+        // 로그 표시
+        const existingAlerts = alertList.querySelectorAll('.alert-item');
+        const alertExists = Array.from(existingAlerts).some(item => 
+            item.querySelector('.alert-time').textContent === data.log_date
+        );
+
+        if (!alertExists) {
+            const alertItem = document.createElement('div');
+            alertItem.classList.add('alert-item');
+            alertItem.innerHTML = `
+                <span class="alert-type">라인 ${data.line_id} - ${data.is_defective ? '불량' : '정상'} 감지 (점수: ${data.faulty_score})</span>
+                <span class="alert-time">${data.log_date}</span>
+                <img src="/static/images/${data.image_path}" class="alert-image" alt="Detected Battery">
+            `;
+            alertList.prepend(alertItem);
+        }
+    }
+
+    // 페이지 로드 시 기존 로그 복원
+    function restoreLogs() {
+        const alertList = document.getElementById('alertList');
+        alertList.innerHTML = '';
+        logHistory.forEach(data => {
+            const alertItem = document.createElement('div');
+            alertItem.classList.add('alert-item');
+            alertItem.innerHTML = `
+                <span class="alert-type">라인 ${data.line_id} - ${data.is_defective ? '불량' : '정상'} 감지 (점수: ${data.faulty_score})</span>
+                <span class="alert-time">${data.log_date}</span>
+                <img src="/static/images/${data.image_path}" class="alert-image" alt="Detected Battery">
+            `;
+            alertList.appendChild(alertItem);
+        });
+    }
+
+    // 1초마다 이미지 갱신
+    setInterval(updateCameraFeeds, 1000);
+
+    // HTTP 폴링으로 서버에서 결과 가져오기
+    function fetchResult() {
+        fetch('/result')
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    console.log('데이터 없음:', data.error);
+                    return;
+                }
+                updateLog(data);
+            })
+            .catch(error => console.error('결과 가져오기 오류:', error));
+    }
+
+    // 1초마다 결과 가져오기
+    setInterval(fetchResult, 1000);
+
+    // 페이지 로드 시 로그 복원
+    window.addEventListener('load', restoreLogs);
+
+    // 전체화면 기능
+    const toggleFullScreen = (element) => {
+        if (!document.fullscreenElement) {
+            element.requestFullscreen().catch(err => {
+                console.log('전체화면 전환 중 오류 발생:', err);
+            });
+        } else {
+            document.exitFullscreen();
+        }
+    };
+
+    // 카메라 피드 전체화면 버튼 이벤트
+    document.querySelectorAll('.camera-feed').forEach(feed => {
+        const fullscreenBtn = feed.querySelector('.camera-control-btn[title="전체화면"]');
+        fullscreenBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleFullScreen(feed);
+        });
+    });
+
+    // 호버 효과 개선
+    document.querySelectorAll('.camera-feed').forEach(feed => {
+        feed.addEventListener('mouseenter', () => {
+            feed.querySelector('.camera-controls').style.opacity = '1';
+        });
+        feed.addEventListener('mouseleave', () => {
+            feed.querySelector('.camera-controls').style.opacity = '0.8';
+        });
+    });
+});
+</script>
+{% endblock %}
