@@ -447,4 +447,35 @@ class DBManager:
         finally:
             self.disconnect()
 
+    # 불량 로그 내역
+    def get_faulty_log(self):
+        try:
+            self.connect()
+            sql = "SELECT * FROM faulty_log ORDER BY logDate DESC"
+            self.cursor.execute(sql)
+            results = self.cursor.fetchall()
+            return results  # 요청 내역 반환
+        except mysql.connector.Error as error:
+            print(f"DB 오류: {str(error)}")
+            return None  # 오류 발생 시 None 반환
+        finally:
+            self.disconnect()
+
+    
+    # 생산 라인 정보 가져오기 
+    def get_linetype(self, lineIdx):
+        try:
+            self.connect()
+            sql = "SELECT linename FROM linetype WHERE lineIdx = %s"
+            self.cursor.execute(sql, (lineIdx,))
+            result = self.cursor.fetchone()  # 단일 결과 가져오기
+            return result['linename'] if result else None  # 딕셔너리의 키로 접근
+        except mysql.connector.Error as error:
+            print(f"DB 오류: {str(error)}")
+            return None  # 오류 발생 시 None 반환
+        finally:
+            self.disconnect()
+    
+
+
     

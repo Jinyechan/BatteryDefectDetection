@@ -75,7 +75,15 @@ def dashboard():
 def analysis():
     if 'userid' not in session:
         return redirect(url_for('login'))
-    return render_template('analysis.html')
+    
+    faultyLog = manager.get_faulty_log()  # 불량 로그 가져오기
+
+    # lineIdx에 대한 라인명 추가
+    for log in faultyLog:
+        line_type = manager.get_linetype(log['lineIdx'])  # log['lineIdx']로 접근
+        log['lineType'] = line_type  # 딕셔너리에 'lineType' 키로 라인 타입 추가
+
+    return render_template('analysis.html', faultyLog=faultyLog)
 
 @app.route('/batch-predict')
 def batch_predict():
@@ -478,4 +486,4 @@ def chart_data():
 
 # ======================== 앱 실행 ========================
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=8080, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)

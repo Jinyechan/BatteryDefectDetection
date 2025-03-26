@@ -62,76 +62,25 @@
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
+                    {%for log in faultyLog%}
                     <tr class="hover:bg-gray-50 cursor-pointer">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">2024-02-15</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">#1024</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">라인 A</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">92점</td>
-                        <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">심각</span></td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{log.logDate}}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">#{{log.faultyIdx}}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{log.lineType}}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{log.faultyScore}}점</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {%if log.faultyScore > 80 %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                    심각
+                                </span>
+                            {%elif log.faultyScore > 60 %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-orange-800">
+                                    보통
+                                </span>
+                            {%endif%}
+                        </td>
                     </tr>
-                    <tr class="hover:bg-gray-50 cursor-pointer">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">2024-02-15</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">#1023</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">라인 B</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">88점</td>
-                        <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">심각</span></td>
-                    </tr>
-                    <tr class="hover:bg-gray-50 cursor-pointer">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">2024-02-14</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">#1022</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">라인 C</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">75점</td>
-                        <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">주의</span></td>
-                    </tr>
-                    <tr class="hover:bg-gray-50 cursor-pointer">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">2024-02-14</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">#1021</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">라인 A</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">82점</td>
-                        <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">심각</span></td>
-                    </tr>
-                    <tr class="hover:bg-gray-50 cursor-pointer">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">2024-02-13</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">#1020</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">라인 B</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">68점</td>
-                        <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">주의</span></td>
-                    </tr>
-                    <tr class="hover:bg-gray-50 cursor-pointer">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">2024-02-13</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">#1019</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">라인 C</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">85점</td>
-                        <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">심각</span></td>
-                    </tr>
-                    <tr class="hover:bg-gray-50 cursor-pointer">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">2024-02-12</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">#1018</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">라인 A</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">72점</td>
-                        <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">주의</span></td>
-                    </tr>
-                    <tr class="hover:bg-gray-50 cursor-pointer">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">2024-02-12</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">#1017</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">라인 B</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">78점</td>
-                        <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">주의</span></td>
-                    </tr>
-                    <tr class="hover:bg-gray-50 cursor-pointer">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">2024-02-11</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">#1016</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">라인 C</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">90점</td>
-                        <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">심각</span></td>
-                    </tr>
-                    <tr class="hover:bg-gray-50 cursor-pointer">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">2024-02-11</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">#1015</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">라인 A</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">83점</td>
-                        <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">심각</span></td>
-                    </tr>
+                    {%endfor%}
                 </tbody>
             </table>
         </div>
