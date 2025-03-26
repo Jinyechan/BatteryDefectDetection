@@ -87,9 +87,30 @@ def predict_with_cnn(image):
     img = cv2.imdecode(np.frombuffer(image.read(), np.uint8), cv2.IMREAD_COLOR)
     img_resized = cv2.resize(img, (128, 128), interpolation=cv2.INTER_LINEAR).astype(np.float32) / 255.0
     pred = model_secondary.predict(np.expand_dims(img_resized, axis=0))[0]
-    is_defective = bool(pred[0] > 0.1)  # 임계값을 0.5에서 0.1로 낮춤
+    is_defective = bool(pred[0] > 0.01)  # 임계값을 0.1에서 0.01로 낮춤
     defect_prob = float(pred[0] * 100)
     print(f"CNN 출력 - is_defective: {is_defective}, defect_prob: {defect_prob}")
+    return is_defective, defect_prob
+
+# 간단한 이미지 처리로 불량 검출 (녹색/적색 영역 감지)
+def detect_defect_by_color(image):
+    img = cv2.imdecode(np.frombuffer(image.read(), np.uint8), cv2.IMREAD_COLOR)
+    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    
+    # 녹색/적색(녹) 영역 감지
+    lower_red = np.array([0, 120, 70])
+    upper_red = np.array([10, 255, 255])
+    mask1 = cv2.inRange(hsv, lower_red, upper_red)
+    
+    lower_red2 = np.array([170, 120, 70])
+    upper_red2 = np.array([180, 255, 255])
+    mask2 = cv2.inRange(hsv, lower_red2, upper_red2)
+    
+    mask = mask1 + mask2
+    defect_ratio = np.sum(mask) / (img.shape[0] * img.shape[1])
+    is_defective = defect_ratio > 0.05  # 5% 이상 녹색/적색 영역이 있으면 불량
+    defect_prob = defect_ratio * 100
+    print(f"색상 기반 불량 검출 - is_defective: {is_defective}, defect_prob: {defect_prob}")
     return is_defective, defect_prob
 
 # U-Net 모델로 결함 위치 시각화
@@ -105,7 +126,7 @@ def predict_with_unet(image):
     pred_mask = (pred_mask > 0.51).astype(np.uint8)
 
     defect_ratio = np.sum(pred_mask) / (224 * 224)
-    defect_score = min(defect_ratio * 100, 100)  # 스케일링 단순화
+    defect_score = min(defect_ratio * 500, 100)  # 스케일링 조정
     print(f"U-Net 출력 - defect_ratio: {defect_ratio}, defect_score: {defect_score}")
 
     pred_mask_resized = cv2.resize(pred_mask[:, :, 0], (original_size[1], original_size[0]), interpolation=cv2.INTER_NEAREST)
@@ -160,7 +181,17 @@ def process_image(image_data):
 
         _, buffer = cv2.imencode('.jpg', image_cv[y1:y2, x1:x2])
         img_io = BytesIO(buffer)
-        is_defective, defect_prob = predict_with_cnn(img_io)
+        
+        # CNN으로 불량 검출
+        is_defective_cnn, defect_prob_cnn = predict_with_cnn(img_io)
+        
+        # 색상 기반 불량 검출
+        img_io.seek(0)
+        is_defective_color, defect_prob_color = detect_defect_by_color(img_io)
+        
+        # CNN과 색상 기반 결과를 조합
+        is_defective = is_defective_cnn or is_defective_color
+        defect_prob = max(defect_prob_cnn, defect_prob_color)
 
         if is_defective:
             img_io.seek(0)

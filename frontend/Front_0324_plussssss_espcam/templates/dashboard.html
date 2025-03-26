@@ -437,6 +437,9 @@
         trendChart.update();
     });
 
+    // 로그를 저장할 배열
+    let logHistory = [];
+
     // 1초마다 이미지 갱신 (라인 A만 갱신)
     function updateCameraFeeds() {
         const camera1 = {
@@ -457,13 +460,16 @@
                 if (data.is_defective) {
                     camera1.status.textContent = '불량 (점수: ' + data.faulty_score + ')';
                     camera1.status.className = 'defect-status defective';
-                    if (data.unet_visualization) {
-                        camera1.img.src = 'data:image/jpeg;base64,' + data.unet_visualization;
+                    if (data.base64_str) {
+                        camera1.img.src = 'data:image/jpeg;base64,' + data.base64_str;
                     }
                 } else {
                     camera1.status.textContent = '정상';
                     camera1.status.className = 'defect-status normal';
                 }
+
+                // 로그 업데이트
+                updateLog(data);
             })
             .catch(error => {
                 console.error('Failed to load image for camera1:', error);
@@ -488,11 +494,49 @@
         return canvas.toDataURL('image/jpeg').split(',')[1];
     }
 
+    // 로그 업데이트 함수
+    function updateLog(data) {
+        const logBody = document.getElementById('logBody');
+        
+        // 로그 히스토리에 추가
+        logHistory.push(data);
+        
+        // 로그 표시
+        const existingLogs = logBody.querySelectorAll('tr');
+        const logExists = Array.from(existingLogs).some(log => 
+            log.querySelector('td:nth-child(2)').textContent === data.log_date
+        );
+
+        if (!logExists) {
+            const newLog = `
+                <tr class="log-item" onclick="goToDetailPage('${data.is_defective ? '불량' : '정상'}', '${data.log_date}', '${data.faulty_score}점')">
+                    <td>${data.is_defective ? '불량' : '정상'}</td>
+                    <td>${data.log_date}</td>
+                    <td class="severity-${data.faulty_score > 50 ? 'high' : 'low'}">${data.faulty_score}점</td>
+                </tr>`;
+            logBody.insertAdjacentHTML('afterbegin', newLog);
+        }
+    }
+
+    // 페이지 로드 시 기존 로그 복원
+    function restoreLogs() {
+        const logBody = document.getElementById('logBody');
+        logBody.innerHTML = '';
+        logHistory.forEach(data => {
+            const newLog = `
+                <tr class="log-item" onclick="goToDetailPage('${data.is_defective ? '불량' : '정상'}', '${data.log_date}', '${data.faulty_score}점')">
+                    <td>${data.is_defective ? '불량' : '정상'}</td>
+                    <td>${data.log_date}</td>
+                    <td class="severity-${data.faulty_score > 50 ? 'high' : 'low'}">${data.faulty_score}점</td>
+                </tr>`;
+            logBody.appendChild(newLog);
+        });
+    }
+
     // 1초마다 이미지 갱신
     setInterval(updateCameraFeeds, 1000);
 
-    // HTTP 폴링으로 서버에서 결과 가져오기 --!>
-
+    // HTTP 폴링으로 서버에서 결과 가져오기
     function refreshLogs() {
         fetch('/result')
             .then(response => response.json())
@@ -501,27 +545,16 @@
                     console.log('데이터 없음:', data.error);
                     return;
                 }
-
-                const logBody = document.getElementById('logBody');
-                const existingLogs = logBody.querySelectorAll('tr');
-                const logExists = Array.from(existingLogs).some(log => 
-                    log.querySelector('td:nth-child(2)').textContent === data.log_date
-                );
-
-                if (!logExists) {
-                    const newLog = `
-                        <tr class="log-item" onclick="goToDetailPage('${data.is_defective ? '불량' : '정상'}', '${data.log_date}', '${data.faulty_score}점')">
-                            <td>${data.is_defective ? '불량' : '정상'}</td>
-                            <td>${data.log_date}</td>
-                            <td class="severity-${data.faulty_score > 50 ? 'high' : 'low'}">${data.faulty_score}점</td>
-                        </tr>`;
-                    logBody.insertAdjacentHTML('afterbegin', newLog);
-                }
+                updateLog(data);
             })
             .catch(error => console.error('결과 가져오기 오류:', error));
     }
+
     // 1초마다 로그 갱신
     setInterval(refreshLogs, 1000);
+
+    // 페이지 로드 시 로그 복원
+    window.addEventListener('load', restoreLogs);
 
     // 상세 페이지 이동 함수
     function goToDetailPage(type, date, scoreSeverity) {
