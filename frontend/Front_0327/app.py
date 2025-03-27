@@ -28,13 +28,8 @@ ph = PasswordHasher()
 
 # ======================== 모델 로드 ========================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-# MODEL_PATH_MAIN = os.path.join(BASE_DIR, "static", "fine_tuned_unet_mobilenet_alpha08.h5")
-# model_main = load_model(MODEL_PATH_MAIN, compile=False)
-# model_secondary = load_model(MODEL_PATH_SECONDARY, compile=False)
 MODEL_PATH_CNN = os.path.join(BASE_DIR, "static", "battery_cnn_model.h5")
 model_secondary = load_model(MODEL_PATH_CNN, compile=False)
-
-# ======================== U-Net 모델 불러오기 ========================
 MODEL_PATH_UNET = os.path.join(BASE_DIR, "static", "fine_tuned_unet_mobilenet_alpha08.h5")
 model_unet = load_model(MODEL_PATH_UNET, compile=False)
 
@@ -97,20 +92,26 @@ def classify_cnn(file):
 
     return result
 
-# =================== 테스트 업로드 ===================
-@app.route('/test-upload', methods=['GET', 'POST'])
+# =================== 테스트 업로드 (페이지 출력 전용) ===================
+@app.route('/test-upload', methods=['GET'])
 def test_upload():
     if 'userid' not in session:
         return redirect(url_for('login'))
+    return render_template('test.html')
 
-    results = []
-    if request.method == 'POST':
-        files = request.files.getlist('images')
-        for f in files:
-            result = classify_cnn(f)
-            results.append(result)
+# =================== 실시간 분석 API (CNN만 빠르게) ===================
+@app.route('/analyze-one', methods=['POST'])
+def analyze_one():
+    file = request.files['image']
+    result = classify_cnn(file)
+    return jsonify(result)
 
-    return render_template('test.html', results=results)
+# =================== 시각화 이미지 API (불량만 비동기) ===================
+@app.route('/get-visual', methods=['POST'])
+def get_visual():
+    file = request.files['image']
+    overlay_base64, _ = apply_unet_visualization(file)
+    return jsonify({'overlay': overlay_base64})
 
 # ======================== Flask 라우트들 ========================
 @app.route('/')
