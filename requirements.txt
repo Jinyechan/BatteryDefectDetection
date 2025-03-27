@@ -31,4 +31,5 @@ numpy==1.26.4
 opencv-python==4.10.0.84
 mysql-connector-python==9.2.0
 tensorflow==2.18.0
-Werkzeug==3.0.1 
+Werkzeug==3.0.1
+keras==2.15.1 
