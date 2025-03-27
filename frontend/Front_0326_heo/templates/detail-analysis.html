@@ -65,7 +65,7 @@
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-gray-600 mr-1">추천 조치사항: </span>
-                                <span id="detail-level" class="text-red-500 .font-semibold .font-semibold"></span>
+                                <span id="detail-recomm"></span>
                             </div>
                         </div>
                     </div>
@@ -80,16 +80,32 @@
                 {% if all_faulty_logs %}
                 {% for log in all_faulty_logs %}
                 <div class="showdetail cursor-pointer hover:opacity-80" data-index="{{loop.index0}}">
-                    <a href="javascript:void(0);"
-                        onclick="showDefectDetails({{ log.faultyIdx }}, '{{ log.logDate }}', '{{ log.lineType }}', {{ log.faultyScore }})"
-                        class="showdetail">
-                        <img src="https://picsum.photos/400/400?random={{log.faultyIdx}}"
-                            alt="불량 이미지 {{log.faultyIdx}}" class="w-full h-48 object-cover rounded-lg shadow-sm" />
+                    <a href="javascript:void(0);" onclick='showDefectDetails(
+                        {{ log.faultyIdx }},
+                        {{ log.logDate | tojson }},
+                        {{ log.lineType | tojson }},
+                        {{ log.faultyScore }},
+                        {{ log.recommendation | tojson }}
+                    )'>
+
+
+                        <img src="https://picsum.photos/400/400?random={{log.faultyIdx}}" alt="불량 이미지 {{log.faultyIdx}}"
+                            class="w-full h-48 object-cover rounded-lg shadow-sm" />
                     </a>
 
                     <script>
-                        function showDefectDetails(faultyIdx, logDate, lineType, faultyScore) {
-                            console.log(`불량번호: ${faultyIdx}, 날짜: ${logDate}, 생산라인: ${lineType}, 불량점수: ${faultyScore}`);
+                        function showDefectDetails(faultyIdx, logDate, lineType, faultyScore, recommendations) {
+                            // 날짜 변환
+                            const date = new Date(logDate);
+                            const formattedDate = date.toISOString().split('T')[0] + ' ' + date.toTimeString().split(' ')[0];
+
+                            // 추천 조치사항이 배열이면 번호를 붙여 리스트 형태로 변환
+                            let recommendationsHtml = "<li>없음</li>";
+                            if (Array.isArray(recommendations) && recommendations.length > 0) {
+                                recommendationsHtml = recommendations.map((item, index) => `${index + 1}. ${item}<br>`).join("");
+                            }
+
+                            console.log(`불량번호: ${faultyIdx}, 날짜: ${formattedDate}, 생산라인: ${lineType}, 불량점수: ${faultyScore}, 추천조치사항: ${recommendationsHtml}`);
 
                             const detailIdxEl = document.getElementById("detail-faultyIdx");
                             if (!detailIdxEl) {
@@ -99,11 +115,15 @@
 
                             // 불량 상세 정보 업데이트
                             detailIdxEl.textContent = `#${faultyIdx}`;
-                            document.getElementById("detail-date").textContent = logDate;
+                            document.getElementById("detail-date").textContent = formattedDate;  // 변환된 날짜 사용
                             document.getElementById("detail-line").textContent = lineType;
                             document.getElementById("detail-score").textContent = faultyScore;
                             document.getElementById("detail-level").textContent =
                                 faultyScore > 80 ? "심각" : faultyScore >= 50 ? "보통" : "양호";
+
+                            // 추천 조치사항 업데이트 (HTML 리스트 적용)
+                            const recommEl = document.getElementById("detail-recomm");
+                            recommEl.innerHTML = `${recommendationsHtml}`;
 
                             // 이미지 업데이트
                             document.getElementById("main-defect-image").src = `https://picsum.photos/400/400?random=${faultyIdx}`;
@@ -111,6 +131,7 @@
                             // 불량 상세 영역 보이기
                             document.querySelector(".detail-log").style.display = "block";
                         }
+
 
                     </script>
                     <!-- <img src="{{ img_url }}" alt="불량 이미지 {{all_faulty_logs|length }}" -->
@@ -131,20 +152,47 @@
                     </div>
                 </div>
                 {% endfor %}
-                {% endif %}
+                {%else%}
+                    <div class="text-gray-600 text-center" style="grid-column: span 4;">등록된 불량 이미지가 없습니다.</div>
+                {%endif%}
             </div>
             <div class="flex justify-center space-x-5 mt-4 mb-6">
-                <button id="prev-btn" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg"><i
-                        class="fas fa-chevron-left"></i> 이전</button>
-                <button id="next-btn" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg">다음 <i
-                        class="fas fa-chevron-right"></i></button>
+                <button id="prev-btn" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg">
+                    <i class="fas fa-chevron-left"></i> 이전
+                </button>
+                <button id="next-btn" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg">
+                    다음 <i class="fas fa-chevron-right"></i>
+                </button>
             </div>
+            
+            <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                const currentPage = new URLSearchParams(window.location.search).get("page") || 1; // 현재 페이지 가져오기
+                const totalPages = {{ total_pages }}; // Jinja에서 페이지 수 가져오기
+            
+                document.getElementById("prev-btn").addEventListener("click", function() {
+                    if (currentPage > 1) {
+                        window.location.href = `/detail-analysis?page=${parseInt(currentPage) - 1}`;
+                    }
+                });
+            
+                document.getElementById("next-btn").addEventListener("click", function() {
+                    if (currentPage < totalPages) {
+                        window.location.href = `/detail-analysis?page=${parseInt(currentPage) + 1}`;
+                    }
+                });
+            });
+            </script>
             <div class="bg-white rounded-lg border shadow-sm p-4">
                 <h3 class="text-lg font-medium mb-3">금일 불량 로그</h3>
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
+                                <th
+                                    class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    No.
+                                </th>
                                 <th
                                     class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     불량번호
@@ -173,6 +221,9 @@
                             {% for today in today_faulty_logs %}
                             <tr>
                                 <td class="px-6 py-4 text-center whitespace-nowrap text-sm text-gray-500">
+                                    {{ loop.index }}
+                                </td>
+                                <td class="px-6 py-4 text-center whitespace-nowrap text-sm text-gray-500">
                                     #{{ today.faultyIdx}}
                                 </td>
                                 <td class="px-6 py-4 text-center whitespace-nowrap text-sm text-gray-500">
@@ -195,7 +246,7 @@
                             {% endfor %}
                             {% else %}
                             <tr>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" colspan="5"
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" colspan="6"
                                     style="text-align: center;">금일 등록된 불량 로그가 없습니다.</td>
                             </tr>
                             {% endif %}

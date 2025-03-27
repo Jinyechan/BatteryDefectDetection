@@ -500,5 +500,27 @@ class DBManager:
             self.disconnect()
 
 
+    # 추천 조치사항 정보 가져오기 
+    def get_recommendations_by_score(self, faultyScore):
+        try:
+            self.connect()
+            sql = "SELECT actiontaken FROM recomm_act WHERE basescore <= %s"  # ✅ 필요한 컬럼만 선택
+            self.cursor.execute(sql, (faultyScore,))
+            results = self.cursor.fetchall()
+
+            # 결과가 없을 경우 빈 리스트 반환
+            if not results:
+                return []
+
+            # 추천 조치사항 리스트 형태로 반환
+            recommendations = [row['actiontaken'] for row in results]
+            return recommendations
+
+        except mysql.connector.Error as error:
+            print(f"DB 오류: {str(error)}")
+            return []  # 오류 발생 시 빈 리스트 반환
+        finally:
+            self.disconnect()
+
 
     
