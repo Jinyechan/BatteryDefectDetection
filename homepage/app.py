@@ -77,7 +77,7 @@ def classify_cnn(file):
 
     pred = model_secondary.predict(img_array)[0]
     label_index = np.argmax(pred)
-    label = '정상' if label_index == 1 else '불량'
+    label = '정상' if label_index == 1 else '불량' 
 
     result = {
         'filename': file.filename,
