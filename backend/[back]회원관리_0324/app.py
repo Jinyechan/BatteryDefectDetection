@@ -29,13 +29,9 @@ manager = DBManager()
 ph = PasswordHasher()
 
 # 관리자페이지 대시보드 - 메인화면 
-
 @app.route('/')
 def index():
-    if 'userid' not in session:
-        return redirect(url_for('login'))
-    return redirect(url_for('index'))
-
+    return render_template('index.html')
 
 # 로그인 
 @app.route('/login', methods=['GET', 'POST'])
@@ -271,7 +267,7 @@ def withdraw():
             session.pop('userid', None)
             return render_template('login.html', alert_message="회원 탈퇴가 완료되었습니다.")
         else:
-            return render_template('login.html', alert_message="회원 탈퇴가 완료되었습니다.")
+            return render_template('admin_dashboard.html', alert_message="회원 탈퇴가 완료되었습니다.")
     else:
         mydata = manager.get_member_mypage(user_id)
         return render_template('member/mypage.html', alert_message="회원 탈퇴 중 오류가 발생했습니다.", mydata=mydata)

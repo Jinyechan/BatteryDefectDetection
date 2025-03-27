@@ -228,7 +228,7 @@ class DBManager:
             return True
 
         except mysql.connector.Error as error:
-            print(f"DB 오류 발생: {str(error)}")
+            print(f"DB 오류 발생: {str(error)}") 
             return False
 
         finally:
