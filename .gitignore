@@ -1,5 +1,7 @@
 venv/
 fine_tuned_unet_mobilenet_alpha08.h5
-model_final.h5
-model_final.ipynb
 best.pt
+battery_cnn_model.h5
+yolo_B.mp4
+yolo_C.mp4
+yolo_D.mp4

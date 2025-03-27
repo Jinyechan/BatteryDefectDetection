@@ -28,35 +28,90 @@ ph = PasswordHasher()
 
 # ======================== 모델 로드 ========================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_PATH_MAIN = os.path.join(BASE_DIR, "static", "fine_tuned_unet_mobilenet_alpha08.h5")
-MODEL_PATH_SECONDARY = os.path.join(BASE_DIR, "static", "model_final.h5")
-model_main = load_model(MODEL_PATH_MAIN, compile=False)
-model_secondary = load_model(MODEL_PATH_SECONDARY, compile=False)
+MODEL_PATH_CNN = os.path.join(BASE_DIR, "static", "battery_cnn_model.h5")
+model_secondary = load_model(MODEL_PATH_CNN, compile=False)
+MODEL_PATH_UNET = os.path.join(BASE_DIR, "static", "fine_tuned_unet_mobilenet_alpha08.h5")
+model_unet = load_model(MODEL_PATH_UNET, compile=False)
 
-# ======================== 예측 함수 ========================
-def predict_and_get_base64(image, use_secondary=False):
-    model = model_secondary if use_secondary else model_main
-    img = cv2.imdecode(np.frombuffer(image.read(), np.uint8), cv2.IMREAD_COLOR)
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    original_size = img.shape[:2]
+# =================== 마스크 시각화 함수 ===================
+def apply_unet_visualization(file):
+    img = Image.open(file).convert('RGB')
+    original_size = img.size
+    img_resized = img.resize((224, 224))
+    img_array = np.array(img_resized) / 255.0
+    img_array = np.expand_dims(img_array, axis=0)
 
-    img_resized = cv2.resize(img, (224, 224)).astype(np.float32) / 255.0
-    pred_mask = model.predict(np.expand_dims(img_resized, axis=0))[0]
-    pred_mask = (pred_mask > 0.5).astype(np.uint8)
+    pred_mask = model_unet.predict(img_array)[0]
+    if pred_mask.ndim == 3:
+        pred_mask = pred_mask[:, :, 0]
+    mask = (pred_mask > 0.5).astype(np.uint8)
 
-    defect_ratio = np.sum(pred_mask) / (224 * 224)
+    # 불량점수 계산 (0~100 점수)
+    defect_ratio = np.sum(mask) / (224 * 224)
     defect_score = min(defect_ratio * 10000, 100)
 
-    pred_mask_resized = cv2.resize(pred_mask[:, :, 0], (original_size[1], original_size[0]), interpolation=cv2.INTER_NEAREST)
-    overlay = img.copy()
-    overlay[pred_mask_resized == 1] = [255, 0, 0]
+    # 시각화
+    mask_resized = cv2.resize(mask, original_size, interpolation=cv2.INTER_NEAREST)
+    img_original = np.array(img)
+    overlay = img_original.copy()
+    overlay[mask_resized == 1] = [255, 0, 0]
 
-    pil_img = Image.fromarray(overlay)
+    pil_overlay = Image.fromarray(overlay)
     buf = BytesIO()
-    pil_img.save(buf, format='PNG')
+    pil_overlay.save(buf, format='PNG')
     base64_str = base64.b64encode(buf.getvalue()).decode('utf-8')
 
-    return defect_score, base64_str
+    return base64_str, round(defect_score, 1)
+
+# =================== CNN + 시각화 ===================
+def classify_cnn(file):
+    file_bytes = file.read()
+    file_cnn = BytesIO(file_bytes)
+    file_unet = BytesIO(file_bytes)
+
+    img = Image.open(file_cnn).convert('RGB')
+    img_resized = img.resize((224, 224))
+    img_array = np.array(img_resized) / 255.0
+    img_array = np.expand_dims(img_array, axis=0)
+
+    pred = model_secondary.predict(img_array)[0]
+    label_index = np.argmax(pred)
+    label = '정상' if label_index == 1 else '불량'
+
+    result = {
+        'filename': file.filename,
+        'label': label,
+        'overlay': None,
+        'score': None
+    }
+
+    if label == '불량':
+        overlay_img, defect_score = apply_unet_visualization(file_unet)
+        result['overlay'] = overlay_img
+        result['score'] = defect_score
+
+    return result
+
+# =================== 테스트 업로드 (페이지 출력 전용) ===================
+@app.route('/test-upload', methods=['GET'])
+def test_upload():
+    if 'userid' not in session:
+        return redirect(url_for('login'))
+    return render_template('test.html')
+
+# =================== 실시간 분석 API (CNN만 빠르게) ===================
+@app.route('/analyze-one', methods=['POST'])
+def analyze_one():
+    file = request.files['image']
+    result = classify_cnn(file)
+    return jsonify(result)
+
+# =================== 시각화 이미지 API (불량만 비동기) ===================
+@app.route('/get-visual', methods=['POST'])
+def get_visual():
+    file = request.files['image']
+    overlay_base64, _ = apply_unet_visualization(file)
+    return jsonify({'overlay': overlay_base64})
 
 # ======================== Flask 라우트들 ========================
 @app.route('/')

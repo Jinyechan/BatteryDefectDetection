@@ -273,6 +273,7 @@ body {
     </div>
 
     <div class="camera-grid">
+        <!-- 라인 A -->
         <div class="camera-feed">
             <video id="camera1" autoplay muted loop>
                 <source src="{{ url_for('static', filename='videos/line1.mp4') }}" type="video/mp4">
@@ -288,9 +289,10 @@ body {
             </div>
         </div>
 
+        <!-- 라인 B -->
         <div class="camera-feed">
             <video id="camera2" autoplay muted loop>
-                <source src="{{ url_for('static', filename='videos/line2.mp4') }}" type="video/mp4">
+                <source src="{{ url_for('static', filename='videos/yolo_B.mp4') }}" type="video/mp4">
             </video>
             <div class="camera-info">
                 <span class="camera-status"></span>
@@ -303,9 +305,10 @@ body {
             </div>
         </div>
 
+        <!-- 라인 C -->
         <div class="camera-feed">
             <video id="camera3" autoplay muted loop>
-                <source src="{{ url_for('static', filename='videos/line3.mp4') }}" type="video/mp4">
+                <source src="{{ url_for('static', filename='videos/yolo_C.mp4') }}" type="video/mp4">
             </video>
             <div class="camera-info">
                 <span class="camera-status"></span>
@@ -318,9 +321,10 @@ body {
             </div>
         </div>
 
+        <!-- 라인 D -->
         <div class="camera-feed">
             <video id="camera4" autoplay muted loop>
-                <source src="{{ url_for('static', filename='videos/line4.mp4') }}" type="video/mp4">
+                <source src="{{ url_for('static', filename='videos/yolo_D.mp4') }}" type="video/mp4">
             </video>
             <div class="camera-info">
                 <span class="camera-status offline"></span>
@@ -335,7 +339,7 @@ body {
     </div>
 </div>
 
-<!-- 실시간 알림 패널을 박스 밖으로 분리 -->
+<!-- 알림 패널 -->
 <div class="alert-panel">
     <div class="alert-header">
         <h3>실시간 알림</h3>
@@ -361,32 +365,26 @@ body {
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // 날짜/시간 업데이트 함수
     function updateDateTime() {
         const now = new Date();
         const days = ['일', '월', '화', '수', '목', '금', '토'];
         const dayOfWeek = days[now.getDay()];
-        
         let hours = now.getHours();
         const ampm = hours >= 12 ? '오후' : '오전';
         hours = hours % 12;
-        hours = hours ? hours : 12; // 0시를 12시로 변환
-        
-        const dateTimeStr = now.getFullYear() + '. ' + 
-            String(now.getMonth() + 1).padStart(2, '0') + '. ' + 
-            String(now.getDate()).padStart(2, '0') + ' (' + dayOfWeek + ') ' + 
-            ampm + ' ' + 
-            String(hours).padStart(2, '0') + ': ' + 
+        hours = hours ? hours : 12;
+        const dateTimeStr = now.getFullYear() + '. ' +
+            String(now.getMonth() + 1).padStart(2, '0') + '. ' +
+            String(now.getDate()).padStart(2, '0') + ' (' + dayOfWeek + ') ' +
+            ampm + ' ' +
+            String(hours).padStart(2, '0') + ': ' +
             String(now.getMinutes()).padStart(2, '0');
-        
         document.getElementById('currentDateTime').textContent = dateTimeStr;
     }
 
-    // 초기 실행 및 1초마다 업데이트
     updateDateTime();
     setInterval(updateDateTime, 1000);
 
-    // 전체화면 기능
     const toggleFullScreen = (element) => {
         if (!document.fullscreenElement) {
             element.requestFullscreen().catch(err => {
@@ -397,7 +395,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
-    // 카메라 피드 전체화면 버튼 이벤트
     document.querySelectorAll('.camera-feed').forEach(feed => {
         const fullscreenBtn = feed.querySelector('.camera-control-btn[title="전체화면"]');
         fullscreenBtn.addEventListener('click', (e) => {
@@ -406,7 +403,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // 컨트롤 버튼 활성화 토글
     document.querySelectorAll('.monitoring-controls .control-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('.monitoring-controls .control-btn').forEach(b => b.classList.remove('active'));
@@ -414,7 +410,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // 호버 효과 개선
     document.querySelectorAll('.camera-feed').forEach(feed => {
         feed.addEventListener('mouseenter', () => {
             feed.querySelector('.camera-controls').style.opacity = '1';
@@ -424,7 +419,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // 카메라 피드 새로고침 함수
     window.reloadCameraFeeds = function() {
         document.querySelectorAll('video').forEach(video => {
             const currentTime = video.currentTime;
@@ -435,7 +429,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     };
 
-    // 자동 새로고침 (5분마다)
     setInterval(reloadCameraFeeds, 300000);
 });
 </script>
