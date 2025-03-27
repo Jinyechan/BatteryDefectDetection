@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}실시간 테스트{% endblock %}
+
+{% block content %}
+<div class="p-6">
+    <h2 class="text-2xl font-bold mb-4">배터리 이미지 테스트</h2>
+
+    <form method="POST" enctype="multipart/form-data" class="mb-6">
+        <input type="file" name="images" multiple accept="image/*" required class="mb-2">
+        <br>
+        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+            테스트 실행
+        </button>
+    </form>
+
+    {% if results %}
+    <div>
+        <h3 class="text-xl font-semibold mb-4">분류 결과</h3>
+        <table class="table-auto w-full border-collapse border border-gray-300">
+            <thead class="bg-gray-100">
+                <tr>
+                    <th class="border border-gray-300 px-4 py-2">파일명</th>
+                    <th class="border border-gray-300 px-4 py-2">결과</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for result in results %}
+                <tr>
+                    <td class="border border-gray-300 px-4 py-2 align-top">{{ result.filename }}</td>
+                    <td class="border border-gray-300 px-4 py-2 align-top {% if result.label == '불량' %}text-red-600 font-bold{% else %}text-green-600 font-semibold{% endif %}">
+                        {{ result.label }}
+
+                        {% if result.label == '불량' and result.score is not none %}
+                        <div class="text-sm text-gray-700 mt-1">
+                            불량점수: {{ result.score }} / 100
+                        </div>
+                        {% endif %}
+
+                        {% if result.label == '불량' and result.overlay %}
+                        <div class="mt-2">
+                            <img src="data:image/png;base64,{{ result.overlay }}" alt="불량 영역 시각화" class="border rounded max-w-xs shadow">
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
