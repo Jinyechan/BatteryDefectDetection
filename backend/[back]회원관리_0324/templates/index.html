@@ -16,26 +16,5 @@
         <p>로그인 해주세요.</p>
         <a href="/login">로그인</a>
     {% endif %}
-
-    <!-- {%for log in faultyLog%}
-                    <tr class="hover:bg-gray-50 cursor-pointer">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{log.logDate}}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">#{{log.faultyIdx}}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{log.lineType}}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{log.faultyScore}}점</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            {%if log.faultyScore > 80 %}
-                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                                    심각
-                                </span>
-                            {%elif log.faultyScore > 60 %}
-                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-orange-800">
-                                    보통
-                                </span>
-                            {%endif%}
-                        </td>
-                    </tr>
-                    {%endfor%}
-     -->
 </body>
 </html>
