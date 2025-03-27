@@ -1,0 +1,149 @@
+/* 불량 상세 분석 페이지 CSS */
+
+/* ============================== */
+/* 메인 콘텐츠 확장 - 전체 폭 */
+/* ============================== */
+/* .main-content {
+  margin-left: 240px;              
+  margin-top: 70px;                   
+  width: calc(100% - 240px);
+  min-height: calc(100vh - 70px);
+  /* padding: 24px 30px;              
+  background: #f9fafb;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+} */
+.main-content {
+  margin-left: 240px;
+  margin-top: 70px;
+  width: calc(100% - 240px);
+  min-height: calc(100vh - 70px);
+  padding: 32px 40px;
+  background: #f9fafb;
+  box-sizing: border-box;
+}
+/* 반응형 */
+@media (max-width: 1024px) {
+  .main-content {
+    margin-left: 0;
+    width: 100%;
+    padding: 24px;
+  }
+}
+
+/* ============================== */
+/* 불량 분석 결과 섹션 상단 간격 줄이기 */
+/* ============================== */
+.main-content > section:first-of-type {
+  margin-top: 0 !important;     /* ✅ 최상단 박스 여백 제거 */
+  padding-top: 0 !important;
+}
+
+  
+  /* ============================== */
+  /* 바둑판 스타일 유지 및 확장 */
+  /* ============================== */
+  /* .defect-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    background: #f8f9fa;
+    padding: 16px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+  } */
+  /* 3. 불량 이미지 그리드 강화 */
+  .defect-grid {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));  /* 반응형 + 꽉 채움 */
+    gap: 20px;
+    padding: 20px;
+  }
+  .defect-grid > div {
+    cursor: pointer;
+    transition: opacity 0.3s ease;
+  }
+  
+  .defect-grid > div:hover {
+    opacity: 0.8;
+  }
+  
+  .defect-grid img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+  }
+  
+  .defect-grid img:hover {
+    transform: scale(1.05);
+  }
+  
+  .defect-grid .info-box {
+    margin-top: 8px;
+    padding: 8px;
+    background: white;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  
+  .defect-grid .info-box p {
+    font-size: 14px;
+    margin: 2px 0;
+  }
+  
+  /* ============================== */
+  /* 상세 정보 스타일 */
+  /* ============================== */
+  #defect-details {
+    font-size: 16px;
+  }
+  
+  #defect-details .text-gray-600 {
+    color: #666;
+  }
+  
+  #defect-details span {
+    font-weight: 500;
+  }
+  
+  #detail-level.text-red-500 {
+    color: #e74c3c;
+  }
+  
+  #detail-level.text-yellow-500 {
+    color: #f1c40f;
+  }
+  
+  /* ============================== */
+  /* 버튼 스타일 */
+  /* ============================== */
+  button {
+    transition: background-color 0.3s, transform 0.2s;
+  }
+  
+  button:hover {
+    background-color: #e2e8f0;
+    transform: translateY(-1px);
+  }
+  
+  /* ============================== */
+  /* 반응형 바둑판 레이아웃 */
+  /* ============================== */
+  @media (max-width: 1024px) {
+    .defect-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  @media (max-width: 600px) {
+    .defect-grid {
+      grid-template-columns: 1fr;
+    }
+  
+    .defect-grid img {
+      height: 150px;
+    }
+  }
+  

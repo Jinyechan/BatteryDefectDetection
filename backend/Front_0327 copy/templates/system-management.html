@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+{% block title %}시스템 관리{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/system-management.css') }}">
+    <script src="{{ url_for('static', filename='js/system-management.js') }}" defer></script>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <!-- 연결 상태 -->
+    <div class="status-container">
+        <div class="status-box">
+            <h3>📷 ESP32 기기연결 상태</h3>
+            <p class="status-good">연결 양호</p>
+        </div>
+    </div>
+
+    <!-- 탭 메뉴 -->
+<div class="tabs">
+    <div class="tab active" onclick="showTab('request')">점검 요청하기</div>
+    <div class="tab" onclick="showTab('history')">점검 요청 내역</div>
+</div>
+
+<form action="/apply_management" method="POST">
+<div id="request" class="tab-content">
+    <div class="form-section">
+        <h2>점검 분야</h2>
+        <div class="form-grid">
+            <div class="radio-item">
+                <input type="radio" id="check1" name="categoryIdx" value="1">
+                <label for="check1">CNN모델 성능 점검</label>
+            </div>
+            <div class="radio-item">
+                <input type="radio" id="check2" name="categoryIdx" value="2">
+                <label for="check2">ESP32 성능 점검</label>
+            </div>
+            <div class="radio-item">
+                <input type="radio" id="check3" name="categoryIdx" value="3">
+                <label for="check3">사이트 점검</label>
+            </div>
+            <div class="radio-item">
+                <input type="radio" id="check4" name="categoryIdx" value="4">
+                <label for="check4">기타 문의</label>
+            </div>
+        </div>
+
+        <h2>요청 정보</h2>
+        <div class="form-group">
+            <label>회원ID</label>
+            <input type="text" class="form-input" id="userid" name="userid" value="{{ user_info.userid }}" readonly="readonly">
+        </div>
+
+        <div class="form-group">
+            <label>이메일</label>
+            <div class="email-group">
+                <input type="text" class="form-input" id="email" name="email" placeholder="아이디" value="{{ user_info.userEmail.split('@')[0] }}">
+                <span>@</span>
+                <input type="text" class="form-input" id="emailDomain" name="emailDomain" placeholder="도메인" value="{{ user_info.userEmail.split('@')[1] }}" readonly>
+                <select class="form-input" id="emailExt" style="width: 200px;">
+                    <option value="">선택하세요</option>
+                    <option value="naver.com" {% if user_info.userEmail.endswith('@naver.com') %}selected{% endif %}>naver.com</option>
+                    <option value="gmail.com" {% if user_info.userEmail.endswith('@gmail.com') %}selected{% endif %}>gmail.com</option>
+                    <option value="hanmail.net" {% if user_info.userEmail.endswith('@hanmail.net') %}selected{% endif %}>hanmail.net</option>
+                    <option value="기타">기타 문의</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>제목</label>
+            <input type="text" class="form-input" id="applyTitle" name="applyTitle">
+        </div>
+
+        <div class="form-group">
+            <label>내용</label>
+            <textarea class="form-input" rows="5" id="applyContent" name="applyContent"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label>파일첨부</label>
+            <div class="file-input-wrap">
+                <label class="file-btn" for="file-upload">파일 선택</label>
+                <input type="file" id="file-upload" name="applyFileName" style="display:none" onchange="showFileName()">
+                <span id="fileName" class="file-name">선택된 파일 없음</span>
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button type="button" class="btn btn-cancel" onclick="resetForm()">취소</button>
+            <button type="submit" class="btn btn-submit" onclick="submitRequest(event)">제출</button>
+        </div>
+    </div>
+</div>
+{% if alert_message %}
+<script type="text/javascript">
+    alert("{{ alert_message }}");
+</script>
+{% endif %}
+</form>
+
+<!-- 점검 요청 내역 -->
+<div id="history" class="tab-content" style="display:none;">
+    <div class="form-section">
+        <h2>점검 요청 내역</h2>
+        <table class="request-table" id="requestHistoryTable">
+            <thead>
+                <tr>
+                    <th>요청일자</th>
+                    <th>제목</th>
+                    <th>상태</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>2025-03-10</td>
+                    <td>CNN 모델 성능 개선 요청</td>
+                    <td><span class="status-bad">처리중</span></td>
+                </tr>
+                <tr>
+                    <td>2025-03-05</td>
+                    <td>ESP32 펌웨어 업데이트</td>
+                    <td><span class="status-good">완료</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // 파일명 표시
+        function showFileName() {
+            const fileInput = document.getElementById('file-upload');
+            const fileName = document.getElementById('fileName');
+            if (fileInput.files.length > 0) {
+                fileName.textContent = fileInput.files[0].name;
+            } else {
+                fileName.textContent = '선택된 파일 없음';
+            }
+        }
+
+        // 폼 초기화
+        function resetForm() {
+            document.querySelectorAll('input[type="text"], textarea').forEach(input => {
+                input.value = '';
+            });
+            document.querySelectorAll('input[type="radio"]').forEach(radio => {
+                radio.checked = false;
+            });
+            document.getElementById('fileName').textContent = '선택된 파일 없음';
+        }
+
+        // 탭 전환
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.style.display = 'none';
+            });
+            document.getElementById(tabId).style.display = 'block';
+
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        // 요청 제출
+        function submitRequest(event) {
+            event.preventDefault(); // 기본 폼 제출 방지
+            // 입력값 가져오기
+            const categoryIdx = document.querySelector('input[name="categoryIdx"]:checked');
+            const userid = document.getElementById('userid').value;
+            const emailId = document.getElementById('email').value;
+            const emailDomain = document.getElementById('emailDomain').value;
+            const applyTitle = document.getElementById('applyTitle').value;
+            const applyContent = document.getElementById('applyContent').value;
+
+            // 유효성 검사
+            let errorMessage = '';
+            if (!categoryIdx) errorMessage += '점검 분야를 선택해주세요.\n';
+            if (!userid) errorMessage += '이름을 입력해주세요.\n';
+            if (!emailId) errorMessage += '이메일 아이디를 입력해주세요.\n';
+            if (!emailDomain) errorMessage += '이메일 도메인을 입력해주세요.\n';
+            if (!applyTitle) errorMessage += '제목을 입력해주세요.\n';
+            if (!applyContent) errorMessage += '내용을 입력해주세요.\n';
+
+            if (errorMessage) {
+                alert(errorMessage);
+                return;
+            }
+
+            // 모든 필드가 올바르게 입력된 경우 폼을 제출
+            document.querySelector('form').submit();
+        }
+    </script>
+</div>
+{% endblock %}

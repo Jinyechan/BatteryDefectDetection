@@ -228,7 +228,7 @@ class DBManager:
             return True
 
         except mysql.connector.Error as error:
-            print(f"DB 오류 발생: {str(error)}")
+            print(f"DB 오류 발생: {str(error)}") 
             return False
 
         finally:
@@ -447,15 +447,14 @@ class DBManager:
         finally:
             self.disconnect()
 
+    # 점검 신청
     def insert_apply(self, categoryIdx, userid, userEmail, applyTitle, applyContent, applyFileName):
         try:
             self.connect()
-            sql = "INSERT INTO apply (categoryIdx, userid, userEmail, applyTitle, applyContent, applyFileName, created_at) VALUES (%s, %s, %s, %s, %s, %s, NOW())"
-            
-            # applyFileName이 None인 경우 NULL로 설정
-            if applyFileName is None or applyFileName == "":
-                applyFileName = None
-
+            sql = """
+            INSERT INTO apply (categoryIdx, userid, userEmail, applyTitle, applyContent, applyFileName, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s, NOW())
+            """
             self.cursor.execute(sql, (categoryIdx, userid, userEmail, applyTitle, applyContent, applyFileName))
             self.connection.commit()
             return True, None
@@ -464,4 +463,16 @@ class DBManager:
         finally:
             self.disconnect()
 
-    
+    # 점검 신청 내역 조회
+    def get_apply_history(self, user_id):
+        try:
+            self.connect()
+            sql = "SELECT * FROM apply WHERE userid = %s ORDER BY created_at DESC"
+            self.cursor.execute(sql, (user_id,))
+            results = self.cursor.fetchall()
+            return results  # 요청 내역 반환
+        except mysql.connector.Error as error:
+            print(f"DB 오류: {str(error)}")
+            return None  # 오류 발생 시 None 반환
+        finally:
+            self.disconnect()
