@@ -29,12 +29,73 @@ manager = DBManager()
 ph = PasswordHasher()
 
 # 관리자페이지 대시보드 - 메인화면 
+
 @app.route('/')
 def dashboard():
     if 'userid' not in session:
         return redirect(url_for('login'))
+    # faultyLog = manager.get_faulty_log()  # 불량 로그 가져오기
+
+    # # lineIdx에 대한 라인명 추가
+    # for log in faultyLog:
+    #     line_type = manager.get_linetype(log['lineIdx'])  # log['lineIdx']로 접근
+    #     log['lineType'] = line_type  # 딕셔너리에 'lineType' 키로 라인 타입 추가
+
+    # return render_template('index.html', faultyLog=faultyLog)  # 템플릿에 로그 전달
+
+# @app.route('/analysis')
+# def analysis():
+#     if 'userid' not in session:
+#         return redirect(url_for('login'))
     
-    return render_template('dashboard.html')
+#     faultyLog = manager.get_faulty_log()  # 불량 로그 가져오기
+
+#     # 각 로그의 lineIdx로 라인 타입 가져오기
+#     for log in faultyLog:
+#         log['lineType'] = manager.get_linetype(log['lineIdx'])  
+
+#     return render_template('analysis.html', faultyLog=faultyLog)
+
+
+# 불량 로그 상세 분석 페이지
+# @app.route('/detail-analysis', methods=['GET'])
+# @app.route('/detail-analysis/<int:faultyIdx>', methods=['GET'])
+# def detail_analysis(faultyIdx=None):
+#     if 'userid' not in session:
+#         return redirect(url_for('login'))
+    
+#     # 금일 불량 로그 가져오기
+#     today_faulty_logs = manager.get_faulty_log(today_only=True)  # 금일 불량 로그 가져오기
+
+#     # 금일 불량 로그 각각에 대한 라인명 추가
+#     for log in today_faulty_logs:
+#         line_type = manager.get_linetype(log['lineIdx'])  # 각 로그의 lineIdx로 라인 타입 가져오기
+#         log['lineType'] = line_type  # 딕셔너리에 'lineType' 키로 라인 타입 추가
+
+#     # 전체 불량 로그 가져오기
+#     all_faulty_logs = manager.get_faulty_log() 
+#     # print(f"전체 불량 로그 가져오기: {all_faulty_logs}")
+
+#     # 전체 불량 로그 각각에 대한 라인명 추가
+#     for log in all_faulty_logs:
+#         line_type = manager.get_linetype(log['lineIdx'])  # 각 로그의 lineIdx로 라인 타입 가져오기
+#         log['lineType'] = line_type  # 딕셔너리에 'lineType' 키로 라인 타입 추가
+
+#     # 특정 불량 로그 상세 정보 가져오기 (faultyIdx가 제공된 경우)
+#     faultyLog = None
+#     if faultyIdx is not None:
+#         faultyLog = manager.get_faulty_log(faultyIdx=faultyIdx)  # 특정 불량 로그 가져오기
+#         if not faultyLog:
+#             return "해당 로그를 찾을 수 없습니다.", 404
+
+#         # 특정 불량 로그에 대한 라인명 추가
+#         line_type = manager.get_linetype(faultyLog[0]['lineIdx'])  # 첫 번째 로그의 lineIdx로 라인 타입 가져오기
+#         faultyLog[0]['lineType'] = line_type  # 딕셔너리에 'lineType' 키로 라인 타입 추가
+
+#     return render_template('detail-analysis.html', 
+#                         faultyLog=faultyLog, 
+#                         today_faulty_logs=today_faulty_logs, 
+#                         all_faulty_logs=all_faulty_logs)
 
 
 # 로그인 
@@ -86,7 +147,7 @@ def login():
         session['username'] = user_info['username']
         session['userLevel'] = user_info['userLevel']
         
-        return redirect(url_for('index'))
+        return redirect(url_for('dashboard'))
 
     return render_template('login.html')
 

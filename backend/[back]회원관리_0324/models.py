@@ -477,6 +477,56 @@ class DBManager:
         finally:
             self.disconnect()
 
+    # # 생산 라인 정보 가져오기 
+    # def get_linetype(self, lineIdx=None):
+    #     try:
+    #         self.connect()
+    #         if lineIdx:
+    #             sql = "SELECT linename FROM linetype WHERE lineIdx = %s"
+    #             self.cursor.execute(sql, (lineIdx,))
+    #             result = self.cursor.fetchone()  # 단일 결과 가져오기
+    #             return result['linename'] if result else None  # linename 반환, 결과가 없으면 None 반환
+    #         else:
+    #             sql = "SELECT linename FROM linetype"
+    #             self.cursor.execute(sql)
+    #             results = self.cursor.fetchall()
+    #             # 모든 linename을 리스트 형태로 반환
+    #             return [row['linename'] for row in results] if results else []
 
+    #     except mysql.connector.Error as error:
+    #         print(f"DB 오류: {str(error)}")
+    #         return None  # 오류 발생 시 None 반환
+    #     finally:
+    #         self.disconnect()
+    
+
+
+    # # 불량 로그 내역
+    # def get_faulty_log(self, faultyIdx=None, today_only=False):
+    #     try:
+    #         self.connect()
+    #         if today_only:
+    #             # 금일 불량 로그 조회(쿼리 최적화 완료)
+    #             sql = "SELECT * FROM faulty_log WHERE logDate < CURDATE() + INTERVAL 1 DAY AND logDate >= CURDATE() ORDER BY faultyIdx DESC;"
+    #             self.cursor.execute(sql,)  # 오늘 날짜를 튜플로 전달
+
+    #         elif faultyIdx is not None:
+    #             # 특정 불량 로그 조회
+    #             sql = "SELECT * FROM faulty_log WHERE faultyIdx = %s"
+    #             self.cursor.execute(sql, (faultyIdx,))  # 튜플로 전달
+                
+    #         else:
+    #             # 모든 불량 로그 조회
+    #             sql = "SELECT * FROM faulty_log ORDER BY logDate, faultyIdx DESC"
+    #             self.cursor.execute(sql)
+
+    #         results = self.cursor.fetchall()
+    #         # print(f"Query results: {results}")  # 쿼리 결과 출력
+    #         return results  # 요청 내역 반환
+    #     except mysql.connector.Error as error:
+    #         print(f"DB 오류: {str(error)}")
+    #         return None  # 오류 발생 시 None 반환
+    #     finally:
+    #         self.disconnect()
     
 
