@@ -86,7 +86,7 @@ def login():
         session['username'] = user_info['username']
         session['userLevel'] = user_info['userLevel']
         
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('index'))
 
     return render_template('login.html')
 
@@ -271,7 +271,7 @@ def withdraw():
             session.pop('userid', None)
             return render_template('login.html', alert_message="회원 탈퇴가 완료되었습니다.")
         else:
-            return render_template('admin_dashboard.html', alert_message="회원 탈퇴가 완료되었습니다.")
+            return render_template('login.html', alert_message="회원 탈퇴가 완료되었습니다.")
     else:
         mydata = manager.get_member_mypage(user_id)
         return render_template('member/mypage.html', alert_message="회원 탈퇴 중 오류가 발생했습니다.", mydata=mydata)
