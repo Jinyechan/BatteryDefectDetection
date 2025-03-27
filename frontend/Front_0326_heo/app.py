@@ -109,60 +109,62 @@ def batch_predict():
 def detail_analysis(faultyIdx=None):
     if 'userid' not in session:
         return redirect(url_for('login'))
-    
+
     # 금일 불량 로그 가져오기
-    today_faulty_logs = manager.get_faulty_log(today_only=True)  # 금일 불량 로그 가져오기
+    today_faulty_logs = manager.get_faulty_log(today_only=True)
 
     # 금일 불량 로그 각각에 대한 라인명 추가
     for log in today_faulty_logs:
-        line_type = manager.get_linetype(log['lineIdx'])  # 각 로그의 lineIdx로 라인 타입 가져오기
-        log['lineType'] = line_type  # 딕셔너리에 'lineType' 키로 라인 타입 추가
+        line_type = manager.get_linetype(log['lineIdx'])
+        log['lineType'] = line_type  # 라인 타입 추가
+
+    # 페이지 번호 가져오기 (기본값 1)
+    page = request.args.get('page', 1, type=int)
+    per_page = 8  # 페이지당 표시할 로그 수
 
     # 전체 불량 로그 가져오기
-    all_faulty_logs = manager.get_faulty_log() 
+    all_faulty_logs = manager.get_faulty_log()
+    total_logs = len(all_faulty_logs)  # 전체 로그 수
+    total_pages = (total_logs + per_page - 1) // per_page  # 총 페이지 수 계산
 
-    # 전체 불량 로그 각각에 대한 라인명 추가
-    for log in all_faulty_logs:
-        line_type = manager.get_linetype(log['lineIdx'])  # 각 로그의 lineIdx로 라인 타입 가져오기
-        log['lineType'] = line_type  
+    # 현재 페이지에 해당하는 로그 가져오기
+    start = (page - 1) * per_page
+    end = start + per_page
+    paginated_logs = all_faulty_logs[start:end]
+
+    # 각 로그에 대한 라인명 추가 및 추천 조치사항 가져오기
+    for log in paginated_logs:
+        line_type = manager.get_linetype(log['lineIdx'])
+        log['lineType'] = line_type
         
-    # 특정 불량 로그 상세 정보 가져오기 (faultyIdx가 제공된 경우)
+        # 불량 점수에 따른 추천 조치사항 가져오기
+        faultyScore = log['faultyScore']
+        recommendation = manager.get_recommendations_by_score(faultyScore)
+        print(f"추천 조치사항: {recommendation}")  # 로그 추가
+        log['recommendation'] = recommendation if recommendation else []
+
+    # 특정 불량 로그 상세 정보 가져오기
     faultyLog = None
     if faultyIdx is not None:
-        faultyLog = manager.get_faulty_log(faultyIdx=faultyIdx)  # 특정 불량 로그 가져오기
+        faultyLog = manager.get_faulty_log(faultyIdx=faultyIdx)
         if not faultyLog:
             return "해당 로그를 찾을 수 없습니다.", 404
 
         # 특정 불량 로그에 대한 라인명 추가
-        line_type = manager.get_linetype(faultyLog[0]['lineIdx'])  # 첫 번째 로그의 lineIdx로 라인 타입 가져오기
-        faultyLog[0]['lineType'] = line_type  # 딕셔너리에 'lineType' 키로 라인 타입 추가
+        line_type = manager.get_linetype(faultyLog[0]['lineIdx'])
+        faultyLog[0]['lineType'] = line_type 
+
+        # 불량 점수에 따른 추천 조치사항 가져오기
+        faultyScore = faultyLog[0]['faultyScore']
+        recommendation = manager.get_recommendations_by_score(faultyScore)
+        faultyLog[0]['recommendation'] = recommendation
 
     return render_template('detail-analysis.html', 
-                        faultyLog=faultyLog, 
-                        today_faulty_logs=today_faulty_logs, 
-                        all_faulty_logs=all_faulty_logs)
-
-
-
-@app.route('/detail-analysis/<int:faultyIdx>', methods=['GET'])
-def detail_analysis_json(faultyIdx):
-    faultyLog = manager.get_faulty_log(faultyIdx=faultyIdx)
-    if not faultyLog:
-        return jsonify({"error": "해당 로그를 찾을 수 없습니다."}), 404
-
-    faultyLog = faultyLog[0]
-    lineType = manager.get_linetype(faultyLog.get('lineIdx'))
-
-    # 로그 추가
-    print(f"Fetched faulty log: {faultyLog}")
-
-    return jsonify({
-        "faultyIdx": faultyLog["faultyIdx"],
-        "logDate": faultyLog["logDate"],
-        "lineType": lineType,
-        "faultyScore": faultyLog["faultyScore"],
-        "image": f"https://picsum.photos/400/400?random={faultyLog['faultyIdx']}"
-    })
+                           faultyLog=faultyLog, 
+                           today_faulty_logs=today_faulty_logs, 
+                           all_faulty_logs=paginated_logs, 
+                           page=page, 
+                           total_pages=total_pages)
 
 
 @app.route('/monitoring')
