@@ -2,3 +2,4 @@ venv/
 fine_tuned_unet_mobilenet_alpha08.h5
 best.pt
 battery_cnn_model.h5
+*.mp4
